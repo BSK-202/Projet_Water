@@ -8,7 +8,7 @@ class Step4PersonalInfo extends StatelessWidget {
   final TextEditingController confirmPasswordController = TextEditingController();
   final List<String> propertyTypes = ['Appartement', 'Maison', 'Villa'];
 
-  Step4PersonalInfo({Key? key}) : super(key: key);
+  Step4PersonalInfo({super.key});
 
   @override
   Widget build(BuildContext context) {

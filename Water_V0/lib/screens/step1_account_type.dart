@@ -8,13 +8,13 @@ class Step1AccountType extends StatelessWidget {
   final VoidCallback onSkipToStep3; // New callback to skip to step 3
 
   const Step1AccountType({
-    Key? key,
+    super.key,
     required this.isChef,
     required this.onNext,
     required this.onSelected,
     required this.canProceed,
     required this.onSkipToStep3, // Initialize the callback
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

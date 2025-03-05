@@ -5,10 +5,10 @@ class WaterGoalWidget extends StatelessWidget {
   final Function(int) onGoalChanged;
 
   const WaterGoalWidget({
-    Key? key,
+    super.key,
     required this.currentGoal,
     required this.onGoalChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

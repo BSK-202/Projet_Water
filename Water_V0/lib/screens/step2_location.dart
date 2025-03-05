@@ -5,8 +5,7 @@ class Step2Location extends StatelessWidget {
   final VoidCallback onBack;
   final bool canProceed;
 
-  const Step2Location({Key? key, required this.onNext, required this.onBack, required this.canProceed})
-      : super(key: key);
+  const Step2Location({super.key, required this.onNext, required this.onBack, required this.canProceed});
 
   @override
   Widget build(BuildContext context) {

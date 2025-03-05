@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class WaterLogWidget extends StatelessWidget {
-  WaterLogWidget({Key? key}) : super(key: key);
+  WaterLogWidget({super.key});
 
   final List<WaterEntry> _entries = [
     WaterEntry(time: '08:30', amount: 250, icon: Icons.water_drop),

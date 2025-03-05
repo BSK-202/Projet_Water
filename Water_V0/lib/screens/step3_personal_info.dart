@@ -12,7 +12,7 @@ class Step3PersonalInfo extends StatefulWidget {
   final VoidCallback onBack;
 
   const Step3PersonalInfo({
-    Key? key,
+    super.key,
     required this.familySizeController,
     required this.houseAreaController,
     required this.emailController,
@@ -22,7 +22,7 @@ class Step3PersonalInfo extends StatefulWidget {
     required this.canProceed,
     required this.onNext,
     required this.onBack,
-  }) : super(key: key);
+  });
 
   @override
   _Step3PersonalInfoState createState() => _Step3PersonalInfoState();

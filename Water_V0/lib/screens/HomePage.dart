@@ -1,42 +1,16 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Mon Application',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2E7D32),
-          primary: const Color(0xFF2E7D32),
-          secondary: const Color(0xFF26A69A),
-          tertiary: const Color(0xFF66BB6A),
-          background: const Color(0xFFF5F9F6),
-        ),
-        fontFamily: 'Montserrat',
-        useMaterial3: true,
-      ),
-      home: const HomePage(),
-    );
-  }
-}
+import 'feature_card.dart';
+import 'scanner_page.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -57,7 +31,9 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     CircleAvatar(
-                      backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                      backgroundColor: theme.colorScheme.primary.withOpacity(
+                        0.1,
+                      ),
                       radius: 24,
                       child: Icon(
                         Icons.person_rounded,
@@ -72,13 +48,10 @@ class HomePage extends StatelessWidget {
                 // Message de bienvenue
                 Text(
                   'Bonjour,',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Bienvenue dans votre\nespace personnel',
                   style: TextStyle(
                     fontSize: 26,
@@ -156,7 +129,10 @@ class HomePage extends StatelessWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: theme.colorScheme.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -175,10 +151,7 @@ class HomePage extends StatelessWidget {
                 // Titre de section
                 const Text(
                   'Explorez nos fonctionnalités',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
 
                 const SizedBox(height: 20),
@@ -192,26 +165,22 @@ class HomePage extends StatelessWidget {
                   mainAxisSpacing: 15,
                   childAspectRatio: 1.1,
                   children: [
-                    _buildFeatureCard(
-                      context,
+                    FeatureCard(
                       icon: Icons.water_drop_outlined,
                       title: 'Suivi d\'eau',
                       color: theme.colorScheme.primary,
                     ),
-                    _buildFeatureCard(
-                      context,
+                    FeatureCard(
                       icon: Icons.bar_chart_rounded,
                       title: 'Statistiques',
                       color: theme.colorScheme.secondary,
                     ),
-                    _buildFeatureCard(
-                      context,
+                    FeatureCard(
                       icon: Icons.lightbulb_outline,
                       title: 'Conseils',
                       color: theme.colorScheme.tertiary,
                     ),
-                    _buildFeatureCard(
-                      context,
+                    FeatureCard(
                       icon: Icons.settings_outlined,
                       title: 'Paramètres',
                       color: Colors.amber[700]!,
@@ -300,68 +269,24 @@ class HomePage extends StatelessWidget {
             icon: Icon(Icons.person_outline),
             label: 'Profil',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code_scanner),
+            label: 'Scanner',
+          ),
         ],
         currentIndex: 0,
         selectedItemColor: theme.colorScheme.primary,
         unselectedItemColor: Colors.grey,
         showUnselectedLabels: true,
-      ),
-    );
-  }
-
-  Widget _buildFeatureCard(
-      BuildContext context, {
-        required IconData icon,
-        required String title,
-        required Color color,
-      }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(15),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        onTap: (index) {
+          if (index == 3) {
+            // Navigate to the scanner page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ScannerPage()),
+            );
+          }
+        },
       ),
     );
   }

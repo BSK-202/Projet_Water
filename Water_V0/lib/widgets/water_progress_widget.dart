@@ -6,10 +6,10 @@ class WaterProgressWidget extends StatelessWidget {
   final int goalAmount;
 
   const WaterProgressWidget({
-    Key? key,
+    super.key,
     required this.currentAmount,
     required this.goalAmount,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
