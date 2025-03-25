@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:water_v0/screens/EspaceMembre.dart';
+import 'package:water_v0/screens/neighborMap.dart';
 import 'screens/login_screen.dart';
 import 'screens/registration_screen.dart';
-import 'screens/HomePage.dart';
+import 'screens/EspaceChef.dart';
+// Import ajouté
+
 
 void main() {
   runApp(const MyApp());
@@ -13,6 +18,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate, // Nécessaire pour Material widgets
+        GlobalWidgetsLocalizations.delegate,  // Nécessaire pour les textes de base
+      ],
+      supportedLocales: const [
+        Locale('fr', 'FR'), // Français
+      ],
       title: 'Mon Application',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -28,9 +40,11 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginScreen(),
+        '/': (context) => MapUsers(),//LoginScreen(),
         '/registration': (context) => RegistrationScreen(),
-        '/home': (context) => HomePage(),
+        '/EspaceChef': (context) => EspaceChef(userId: '',),
+        '/EspaceMembre': (context) => EspaceMembre(),
+
       },
     );
   }

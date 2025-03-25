@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'recup_id_famille.dart';
+
+import 'dart:convert';
+import 'EspaceChef.dart';
+import 'EspaceMembre.dart';
 import 'registration_screen.dart';
-import 'HomePage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,30 +19,103 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  void _login() {
+  // 🛠️ Assurez-vous que l'URL est correcte pour votre environnement
+  final String _apiUrl = "http://192.168.1.17:5000/login"; // Pour l'émulateur Android
+  // final String _apiUrl = "http://127.0.0.1:5000/login"; // Pour Chrome
+  // final String _apiUrl = "http://192.168.x.x:5000/login"; // Pour un téléphone physique (remplacez par l'IP du PC)
+
+  void _login() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Simuler une connexion
-    Future.delayed(const Duration(seconds: 2), () {
+    final String email = _emailController.text;
+    final String password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez entrer tous les champs !'),
+          backgroundColor: Colors.red,
+        ),
+      );
       setState(() {
         _isLoading = false;
       });
+      return;
+    }
 
-      // Exemple de logique de connexion réussie
+    final Map<String, dynamic> data = {
+      "email": email,
+      "password": password,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+
+      print("🔹 Response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        print("🔹 Données reçues : $responseData");
+        await saveUserId(responseData['idFamille']);
+        print("🔹 Email stocké : $email");
+
+        if (responseData.containsKey('is_chef')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Connexion réussie !'),
+              backgroundColor: Color(0xFF2E7D32),
+            ),
+          );
+
+          Future.delayed(const Duration(seconds: 1), () async {
+            print("🔹 Redirection...");
+            if (responseData['is_chef'] == true) {
+              print("🔹 Redirection vers EspaceChef");
+              String? userId = await getUserId();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => EspaceChef(userId: userId ??'')),
+              );
+            } else {
+              print("🔹 Redirection vers EspaceMembre");
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const EspaceMembre()),
+              );
+            }
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message'] ?? 'Erreur serveur'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Erreur de connexion'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Connexion réussie!'),
-          backgroundColor: Color(0xFF2E7D32),
+        SnackBar(
+          content: Text('❌ Erreur serveur : ${e.toString()}'),
+          backgroundColor: Colors.red,
         ),
       );
-
-      // Redirection vers l'écran d'accueil après connexion
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
-    });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _goToRegistration() {
@@ -69,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Text(
-                'Rejoignez-nous!',
+                'Rejoignez-nous !',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
@@ -88,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Votre contribution compte!',
+                'Votre contribution compte !',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -98,7 +176,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Champ Email
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -116,7 +193,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Champ Mot de passe
               TextField(
                 controller: _passwordController,
                 obscureText: true,
@@ -134,7 +210,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Bouton Connexion
               ElevatedButton(
                 onPressed: _isLoading ? null : _login,
                 style: ElevatedButton.styleFrom(
@@ -157,7 +232,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 16),
 
-              // Bouton "Créer un compte"
               TextButton(
                 onPressed: _goToRegistration,
                 child: const Text(
@@ -169,8 +243,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-
             ],
           ),
         ),

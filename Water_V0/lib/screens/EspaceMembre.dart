@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'feature_card.dart';
-import 'scanner_page.dart';
+import 'facture_page.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+
+class EspaceMembre extends StatelessWidget {
+  const EspaceMembre({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +53,7 @@ class HomePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Bienvenue dans votre\nespace personnel',
+                  'Bienvenue dans votre\nespace Membre',
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -283,7 +284,7 @@ class HomePage extends StatelessWidget {
             // Navigate to the scanner page
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const ScannerPage()),
+              MaterialPageRoute(builder: (context) => const FacturePage(userId: '',)),
             );
           }
         },

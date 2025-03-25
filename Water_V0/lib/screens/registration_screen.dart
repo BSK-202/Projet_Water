@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'step1_account_type.dart';
-import 'step2_location.dart';
-import 'step3_personal_info.dart';
+import 'step3_personal_info.dart'; // Ensure this file exists and contains the Step2PersonalInfo widget
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -17,14 +16,27 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool? _isChef;
 
   // Contrôleurs pour les champs de texte
-  final TextEditingController _familySizeController = TextEditingController(text: '1');
+  final TextEditingController _familySizeController = TextEditingController(
+    text: '1',
+  );
   final TextEditingController _houseAreaController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+  TextEditingController();
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _birthDateController = TextEditingController();
 
   // Liste des types de logement
-  final List<String> _propertyTypes = ['Appartement', 'Maison', 'Studio', 'Loft', 'Duplex', 'Autre'];
+  final List<String> _propertyTypes = [
+    'Appartement',
+    'Maison',
+    'Studio',
+    'Loft',
+    'Duplex',
+    'Autre',
+  ];
 
   @override
   void dispose() {
@@ -38,7 +50,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 2) {
+    if (_currentStep < 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -49,13 +61,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     } else {
       _submitForm();
     }
-  }
-
-  void _skipToStep3() {
-    _pageController.jumpToPage(2);
-    setState(() {
-      _currentStep = 2;
-    });
   }
 
   void _previousStep() {
@@ -71,9 +76,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _submitForm() {
-    // Ici, vous implémenteriez la logique pour envoyer les données au serveur
-    // Pour l'exemple, nous affichons simplement un message de succès
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Compte créé avec succès!'),
@@ -81,22 +83,14 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       ),
     );
 
-    // Redirection vers la page de connexion
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
 
-  bool get _canProceedFromStep1 {
-    if (_isChef == null) return false;
-    return true;
-  }
+  bool get _canProceedFromStep1 => _isChef != null;
 
   bool get _canProceedFromStep2 {
-    return true; // Suppression de la vérification de l'adresse
-  }
-
-  bool get _canProceedFromStep3 {
     return _familySizeController.text.isNotEmpty &&
         _houseAreaController.text.isNotEmpty &&
         _emailController.text.isNotEmpty &&
@@ -131,24 +125,19 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   const Text(
                     'Créez votre compte',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Rejoignez notre communauté et commencez votre parcours écologique',
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
                   // Indicateur d'étape
                   Row(
-                    children: List.generate(3, (index) {
+                    children: List.generate(2, (index) {
                       bool isActive = _currentStep >= index;
-                      bool isLast = index == 2;
+                      bool isLast = index == 1;
 
                       return Expanded(
                         child: Row(
@@ -157,14 +146,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               width: 30,
                               height: 30,
                               decoration: BoxDecoration(
-                                color: isActive ? const Color(0xFF2E7D32) : Colors.grey.shade300,
+                                color:
+                                isActive
+                                    ? const Color(0xFF2E7D32)
+                                    : Colors.grey.shade300,
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
                                 child: Text(
                                   '${index + 1}',
                                   style: TextStyle(
-                                    color: isActive ? Colors.white : Colors.grey,
+                                    color:
+                                    isActive ? Colors.white : Colors.grey,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -174,7 +167,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               Expanded(
                                 child: Container(
                                   height: 2,
-                                  color: _currentStep > index ? const Color(0xFF2E7D32) : Colors.grey.shade300,
+                                  color:
+                                  _currentStep > index
+                                      ? const Color(0xFF2E7D32)
+                                      : Colors.grey.shade300,
                                 ),
                               ),
                           ],
@@ -183,13 +179,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     }),
                   ),
                   const SizedBox(height: 8),
-                  // Libellés des étapes
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Type de compte', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Text('Localisation', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                      Text('Informations', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text(
+                        'Type de compte',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      Text(
+                        'Informations personnelles',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
                     ],
                   ),
                 ],
@@ -210,20 +210,30 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       });
                     },
                     canProceed: _canProceedFromStep1,
-                    onSkipToStep3: _skipToStep3, // Pass the skip callback
+                    onSkipToStep3: () {
+                      _pageController.jumpToPage(2);
+                      setState(() {
+                        _currentStep = 2;
+                      });
+                    },
+                    onBackToLogin: () {
+                      // Rediriger l'utilisateur vers la page de login
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
                   ),
-                  // Étape 2: Localisation (supprimée)
-                  Step2Location(onNext: _nextStep, onBack: _previousStep, canProceed: _canProceedFromStep2),
-                  // Étape 3: Informations personnelles
+
+                  // Étape 2: Informations personnelles
                   Step3PersonalInfo(
-                    familySizeController: _familySizeController,
-                    houseAreaController: _houseAreaController,
+                    firstNameController: _firstNameController,
+                    lastNameController: _lastNameController,
+                    birthDateController: _birthDateController,
                     emailController: _emailController,
                     passwordController: _passwordController,
                     confirmPasswordController: _confirmPasswordController,
-                    propertyTypes: _propertyTypes,
-                    canProceed: _canProceedFromStep3,
-                    onNext: _submitForm,
+                    canProceed: _canProceedFromStep2,
+                    onSubmit: _submitForm,
                     onBack: _previousStep,
                   ),
                 ],

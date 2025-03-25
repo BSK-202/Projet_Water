@@ -9,11 +9,11 @@ class Step2Location extends StatefulWidget {
   final bool canProceed;
 
   const Step2Location({
-    Key? key,
+    super.key,
     required this.onNext,
     required this.onBack,
     required this.canProceed,
-  }) : super(key: key);
+  });
 
   @override
   _Step2LocationState createState() => _Step2LocationState();

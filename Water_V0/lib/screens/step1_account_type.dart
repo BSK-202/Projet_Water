@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+// Assurez-vous que ce fichier est importé pour la redirection
 
 class Step1AccountType extends StatelessWidget {
   final bool? isChef;
   final VoidCallback onNext;
   final Function(bool) onSelected;
   final bool canProceed;
-  final VoidCallback onSkipToStep3; // New callback to skip to step 3
+  final VoidCallback onSkipToStep3; // Callback pour sauter à l'étape 3
+  final VoidCallback onBackToLogin; // Callback pour retourner à la page de login
 
   const Step1AccountType({
     super.key,
@@ -13,8 +17,33 @@ class Step1AccountType extends StatelessWidget {
     required this.onNext,
     required this.onSelected,
     required this.canProceed,
-    required this.onSkipToStep3, // Initialize the callback
+    required this.onSkipToStep3,
+    required this.onBackToLogin, // Ajouter ce callback dans le constructeur
   });
+
+  Future<void> _sendSelection(bool isChef) async {
+    final url = Uri.parse("http://127.0.0.1:5000/selection"); // URL du serveur Flask
+
+    final Map<String, dynamic> selectionData = {
+      "isChef": isChef,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(selectionData),
+      );
+
+      if (response.statusCode == 200) {
+        print("Données envoyées avec succès : ${response.body}");
+      } else {
+        print("Erreur : ${response.body}");
+      }
+    } catch (e) {
+      print("Erreur réseau : $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +80,9 @@ class Step1AccountType extends StatelessWidget {
                 icon: Icons.check_circle_outline,
                 color: const Color(0xFF2E7D32),
                 isSelected: isChef == true,
-                onTap: () => onSelected(true),
+                onTap: () {
+                  onSelected(true);
+                },
               ),
 
               const SizedBox(height: 12),
@@ -65,7 +96,6 @@ class Step1AccountType extends StatelessWidget {
                 isSelected: isChef == false,
                 onTap: () {
                   onSelected(false);
-                  onSkipToStep3(); // Skip to step 3
                 },
               ),
 
@@ -75,7 +105,14 @@ class Step1AccountType extends StatelessWidget {
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
-                  onPressed: canProceed ? onNext : null,
+                  onPressed: canProceed
+                      ? () async {
+                    if (isChef != null) {
+                      await _sendSelection(isChef!); // Envoyer les données
+                      onNext(); // Passer à l'étape suivante
+                    }
+                  }
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2E7D32),
                     foregroundColor: Colors.white,
@@ -86,6 +123,23 @@ class Step1AccountType extends StatelessWidget {
                     ),
                   ),
                   child: const Text('Continuer'),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Bouton Retour vers la page de connexion
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: onBackToLogin, // Appeler la fonction de retour
+                  child: const Text(
+                    'Retour à la connexion',
+                    style: TextStyle(
+                      color: Color(0xFF2E7D32),
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
             ],
