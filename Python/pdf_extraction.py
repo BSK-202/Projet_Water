@@ -29,12 +29,26 @@ def extract_data_from_pdf(pdf_path,user_id):
         "date_fin": date_fin,
         "consommation_eau_m3": int(consommation) if consommation else None
     }
-
     conn = get_connection()
     if not conn:
         return jsonify({"message": "❌ Connexion à la base échouée"}), 500
+    
+    
     cur = conn.cursor()
-    cur.execute("""INSERT INTO "Facture" ("coutConsommation", "dateFacture", "IDfamilleRefFact")
+        
+    # Vérifier si une facture existe déjà pour cette famille et cette date
+    cur.execute("""SELECT "IDFacture" FROM "Facture" 
+                    WHERE "dateFacture" = %s AND "IDfamilleRefFact" = %s""", 
+                    (result["date_fin"], user_id))
+    existing_facture = cur.fetchone()
+    
+    if existing_facture:
+        return jsonify({"message": "❌ Une facture existe déjà pour cette famille et cette date"}), 400
+    
+    if not conn:
+        return jsonify({"message": "❌ Connexion à la base échouée"}), 500
+    cur1 = conn.cursor()
+    cur1.execute("""INSERT INTO "Facture" ("coutConsommation", "dateFacture", "IDfamilleRefFact")
                     VALUES ( %s, %s,%s)
                     RETURNING "IDfamilleRefFact";""", (result['consommation_eau_m3'], result["date_fin"],user_id))
     conn.commit()

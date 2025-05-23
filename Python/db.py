@@ -2,9 +2,9 @@
 import psycopg2
 
 DB_CONFIG = {
-    "dbname": "e-commerce3",
+    "dbname": "bdd",
     "user": "postgres",
-    "password": "Tb20041211",
+    "password": "admin",
     "host": "localhost",
     "port": "5432"
 }

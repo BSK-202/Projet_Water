@@ -1,320 +1,385 @@
-import 'package:flutter/material.dart';
-import 'package:water_v0/screens/neighborMap.dart';
-import 'package:water_v0/screens/rankingPage.dart';
-import 'feature_card.dart';
-import 'facture_page.dart';
-import 'login_screen.dart'; // Assurez-vous que la page Login.dart est importée
-import 'card.dart' as FeatureCard;
+import 'dart:convert';
 
-class EspaceChef extends StatelessWidget {
-  const EspaceChef({super.key, required this.userId});
-  final String userId;
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:water_v0/screens/local_Info.dart';
+
+import 'package:water_v0/screens/neighborMap.dart';
+import 'package:water_v0/screens/recompense.dart';
+import 'package:water_v0/screens/video_list_item.dart';
+import 'package:water_v0/screens/water_level_indicator.dart';
+import 'BottomNavigationBar.dart';
+import 'facture_page.dart';
+import 'Local.dart';
+import 'card.dart' as FeatureCard;
+import 'recup_id_famille.dart'; // votre helper getIdUser()
+
+class EspaceChef extends StatefulWidget {
+
+ const EspaceChef({super.key, required this.userId});
+  final String userId;  @override
+  _EspaceChefState createState() => _EspaceChefState();
+}
+
+class _EspaceChefState extends State<EspaceChef> {
+  Map<String, dynamic>? userData;
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final email = await getIdUSer(); 
+      if (email == null || email.isEmpty) {
+        setState(() {
+          errorMessage = 'Veuillez vous connecter';
+          isLoading = false;
+        });
+        return;
+      }
+
+      final uri = Uri.parse('http://127.0.0.1:5000/profile?email=$email');
+      final response = await http.get(uri).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          userData = json.decode(response.body) as Map<String, dynamic>;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Erreur serveur ${response.statusCode}';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erreur de connexion : $e';
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (errorMessage != null) {
+      return Scaffold(
+        body: Center(child: Text(errorMessage!)),
+      );
+    }
+
+    final prenom = userData?['prenom'] ?? '';
+    final nom = userData?['nom'] ?? '';
+    final fullName = '$prenom $nom'.trim();
+    final avatarUrl = userData?['avatar'] as String? ?? 'assets/default_avatar.png';
+    final waterPoints = userData?['score']?.toString() ?? '0';
+    final chef = userData?['is_chef'] ?? false;
+    // Usage d'eau
+    final currentUsage = userData?['currentUsage']?.toString() ?? '0';
+    final averageUsage = userData?['averageUsage']?.toString() ?? '0';
+    final savedPercent = userData?['savedPercent']?.toString() ?? '0';
+
+    // Vidéos Learn & Earn
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // En-tête avec logo
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'EcoApp',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        // Redirection vers la page de login lors du clic
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginScreen(),
-                          ), // Assurez-vous que LoginPage() est votre page de connexion
-                        );
-                      },
-                      child: CircleAvatar(
-                        backgroundColor: theme.colorScheme.primary.withOpacity(
-                          0.1,
-                        ),
-                        radius: 24,
-                        child: Icon(
-                          Icons.exit_to_app, // Icône de déconnexion
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 30),
-
-                // Message de bienvenue
-                Text(
-                  'Bonjour,',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Bienvenue dans votre\nespace Chef',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                ),
-
-                const SizedBox(height: 40),
-
-                // Bannière principale
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.secondary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ─── En-tête ─────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      Row(
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: theme.colorScheme.primary,
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundImage: avatarUrl.startsWith('http')
+                              ? NetworkImage(avatarUrl)
+                              : AssetImage(avatarUrl) as ImageProvider,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.eco_outlined,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 15),
-                          const Expanded(
-                            child: Text(
-                              'Commencez votre parcours écologique',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                          Text(fullName, style: theme.textTheme.titleLarge),
+                          Row(
+                            children: [
+                              Icon(Icons.water_drop, color: theme.colorScheme.primary, size: 16),
+                              const SizedBox(width: 4),
+                              Text('$waterPoints Water Points', style: theme.textTheme.bodyMedium),
+                            ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        'Découvrez comment réduire votre impact environnemental au quotidien',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: theme.colorScheme.primary,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 12,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Commencer',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
                     ],
                   ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // Titre de section
-                const Text(
-                  'Explorez nos fonctionnalités',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 20),
-
-                // Grille de fonctionnalités
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 1.1,
-                  children: [
-                    FeatureCard.FeatureCard(
-                      icon: Icons.water_drop_outlined,
-                      title: 'Suivi d\'eau',
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
                       color: theme.colorScheme.primary,
+                      onPressed: () {},
                     ),
-                    FeatureCard.FeatureCard(
-                      icon: Icons.bar_chart_rounded,
-                      title: 'Statistiques',
-                      color: theme.colorScheme.secondary,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MapUsers(),
-                          ),
-                        );
-                      },
-                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
 
-                    FeatureCard.FeatureCard(
-                      icon: Icons.lightbulb_outline,
-                      title: 'Conseils',
-                      color: theme.colorScheme.tertiary,
+              // ─── Usage d'eau ───────────────────────
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Your Water Usage',
+                            style: theme.textTheme.titleLarge
+                                ?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text('This Month',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                        ),
+                      ],
                     ),
-                    FeatureCard.FeatureCard(
-                      icon: Icons.settings_outlined,
-                      title: 'Paramètres',
-                      color: Colors.amber[700]!,
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        WaterLevelIndicator(
+                            percentage: double.tryParse(savedPercent)! / 100, size: 100),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildUsageRow(context, 'Current: $currentUsage m³',
+                                  Icons.water_drop_outlined, Colors.white),
+                              const SizedBox(height: 8),
+                              _buildUsageRow(
+                                  context, 'Average: $averageUsage m³', Icons.people_outline, Colors.white),
+                              const SizedBox(height: 8),
+                              _buildUsageRow(
+                                  context, 'You saved $savedPercent%', Icons.trending_down, Colors.white),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 30),
 
-                const SizedBox(height: 30),
-
-                // Bannière secondaire
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+              // ─── Learn & Earn ───────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Learn & Earn', style: theme.textTheme.headlineMedium),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.tertiary,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.play_circle_outline,
+                            color: theme.colorScheme.primary, size: 16),
+                        const SizedBox(width: 4),
+                        Text('Watch & earn points',
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600, fontSize: 12)),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.tertiary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: theme.colorScheme.tertiary,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Restez informé',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'Activez les notifications pour ne rien manquer',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: true,
-                        onChanged: (value) {},
-                        activeColor: theme.colorScheme.primary,
-                      ),
-                    ],
-                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Liste dynamique des vidéos
+                VideoListItem(
+                  title: 'Introduction to Water Conservation',
+                  videoAsset: 'assets/videos/reduce_consumption.mp4',
+                  duration: '1:00',
+                  points:30,
+                  isWatched: true,
                 ),
-              ],
-            ),
+              const SizedBox(height: 30),
+
+              // ─── Explorez nos fonctionnalités ──────
+              const Text('Explorez nos fonctionnalités',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 1.1,
+                children: [
+                  FeatureCard.FeatureCard(
+                    icon: Icons.star,
+                    title: 'Recompenses',
+                    color: theme.colorScheme.primary,
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => const RewardsPage()));
+                    },
+                  ),
+                  FeatureCard.FeatureCard(
+                    icon: Icons.bar_chart_rounded,
+                    title: 'Statistiques',
+                    color: theme.colorScheme.secondary,
+                    onTap: () {
+                      Navigator.push(
+                          context, MaterialPageRoute(builder: (_) => const MapUsers()));
+                    },
+                  ),
+                  FeatureCard.FeatureCard(
+                    icon: Icons.house,
+                    title: 'Local',
+                    color: theme.colorScheme.tertiary,
+                    onTap: () async {
+                     try {
+                    String? userId = await getUserId();
+
+                final response = await http.get(
+                  Uri.parse('http://127.0.0.1:5000/check-local?code_famille=$userId'),
+                );
+
+                if (response.statusCode == 200) {
+                  final data = json.decode(response.body);
+                  final hasLocal = data['has_local'] ?? false;
+
+                  if (hasLocal) {
+                    print('Local trouvé: $hasLocal');
+                    
+                    // Debug: afficher la structure des données reçues
+                    print('Données reçues: ${data['local']}');
+                    
+                    // Gestion robuste des données
+                    dynamic localData = data['local'];
+                    
+                    if (localData != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LocalFamilleScreen(
+                            initialLocalData: localData is Map<String, dynamic> 
+                                ? localData 
+                                : null,isChef: true,
+                          ),
+                        ),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Step1Location()),
+                      );
+                    }
+                  } else {
+                    print('Aucun local trouvé');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Step1Location()),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur serveur: ${response.statusCode}')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erreur: ${e.toString()}')),
+                );
+             }
+                  
+                    },
+                  ),
+                  FeatureCard.FeatureCard(
+                    icon: Icons.receipt,
+                    title: 'Facture',
+                    color: Colors.amber[700]!,
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => FacturePage(userId: userData!['id'].toString(), isChef: true,)));
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Accueil',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            label: 'Explorer',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt), // Icône de facture
-            label: 'Factures', // Nouveau label
-          ),
-        ],
+      bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: 0,
-        selectedItemColor: theme.colorScheme.primary,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        onTap: (index) {
-          if (index == 3) {
-            // Naviguer vers la page de factures
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FacturePage(userId: userId ?? ''),
-              ), // Vous pouvez remplacer ScannerPage() par la page de factures si elle existe
-            );
-          }
-        },
+        userId: userData!['id'].toString(),
+        isChef: true,
+        onTap: (i) {/* à gérer si besoin */},
       ),
     );
   }
+
+  Widget _buildUsageRow(
+          BuildContext context, String text, IconData icon, Color color) =>
+      Row(
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.w500)),
+        ],
+      );
 }

@@ -1,11 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:water_v0/models/family.dart';
 
 class ApiService {
   static const String _baseUrl =
-      'http://192.168.1.17:5000'; // Adresse de mon servers
+      'http://127.0.0.1:5000'; // Adresse de mon servers
 
   // Fonction pour récupérer les utilisateurs
   static Future<List<Family>> fetchUsers() async {

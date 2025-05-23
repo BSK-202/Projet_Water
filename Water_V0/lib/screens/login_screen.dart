@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'package:water_v0/models/challenge_provider.dart';
 import 'recup_id_famille.dart';
-
 import 'dart:convert';
 import 'EspaceChef.dart';
 import 'EspaceMembre.dart';
 import 'registration_screen.dart';
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,8 +20,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   // 🛠️ Assurez-vous que l'URL est correcte pour votre environnement
-  final String _apiUrl = "http://192.168.1.17:5000/login"; // Pour l'émulateur Android
-  // final String _apiUrl = "http://127.0.0.1:5000/login"; // Pour Chrome
+  // final String _apiUrl = "http://192.168.1.17:5000/login"; // Pour l'émulateur Android
+  final String _apiUrl = "http://127.0.0.1:5000/login";
+  
+  get userId => null;
+  
+  get idUser => null; // Pour Chrome
   // final String _apiUrl = "http://192.168.x.x:5000/login"; // Pour un téléphone physique (remplacez par l'IP du PC)
 
   void _login() async {
@@ -45,10 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final Map<String, dynamic> data = {
-      "email": email,
-      "password": password,
-    };
+    final Map<String, dynamic> data = {"email": email, "password": password};
 
     try {
       final response = await http.post(
@@ -62,7 +63,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         print("🔹 Données reçues : $responseData");
-        await saveUserId(responseData['idFamille']);
+     
+       
+        await saveIdUser(email);
         print("🔹 Email stocké : $email");
 
         if (responseData.containsKey('is_chef')) {
@@ -73,21 +76,40 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-          Future.delayed(const Duration(seconds: 1), () async {
-            print("🔹 Redirection...");
-            if (responseData['is_chef'] == true) {
-              print("🔹 Redirection vers EspaceChef");
-              String? userId = await getUserId();
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => EspaceChef(userId: userId ??'')),
-              );
-            } else {
-              print("🔹 Redirection vers EspaceMembre");
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const EspaceMembre()),
-              );
-            }
-          });
+        Future.delayed(const Duration(seconds: 1), () async {
+        print("🔹 Redirection...");
+        if (responseData['is_chef'] == true) {
+          // Vérification de l'ID utilisateur
+          if (responseData['idFamille'] != null) {
+            await saveUserId(responseData['idFamille']);
+          }
+          print("🔹 ID famille : ${responseData['idFamille']}");
+          print("🔹 ID utilisateur : ${responseData['idUser']}");
+
+    print("🔹 ??????Redirection vers EspaceChef");
+    String? userId = await getUserId();
+    String? idUser = await getIdUSer();
+    print("🔹 ID utilisateur : $idUser");
+
+    // Utilisation correcte de ChallengeProvider
+    final challengeProvider = Provider.of<ChallengeProvider>(context, listen: false);
+    await challengeProvider.fetchChallengesFromAPI(context, idUser ?? '');
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => EspaceChef(userId: userId ?? ''),
+      ),
+    );
+  } 
+  else {
+    print("🔹!!!!!!!! Redirection vers EspaceMembre");
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => EspaceMembre(userId: userId ?? ''),
+      ),
+    );
+  }
+});
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -158,10 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 10),
               const Text(
                 'Faites partie de notre communauté dédiée à l\'économie d\'eau.',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -220,14 +239,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                )
-                    : const Text(
-                  'Se connecter',
-                  style: TextStyle(fontSize: 18),
-                ),
+                child:
+                    _isLoading
+                        ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        )
+                        : const Text(
+                          'Se connecter',
+                          style: TextStyle(fontSize: 18),
+                        ),
               ),
 
               const SizedBox(height: 16),
@@ -236,10 +258,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: _goToRegistration,
                 child: const Text(
                   'Créer un compte',
-                  style: TextStyle(
-                    color: Color(0xFF2E7D32),
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: Color(0xFF2E7D32), fontSize: 16),
                 ),
               ),
               const SizedBox(height: 20),
@@ -250,3 +269,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+

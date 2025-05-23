@@ -5,11 +5,16 @@ import 'package:water_v0/screens/neighborMap.dart';
 import 'screens/login_screen.dart';
 import 'screens/registration_screen.dart';
 import 'screens/EspaceChef.dart';
-// Import ajouté
-
+import 'package:provider/provider.dart';
+import 'package:water_v0/models/challenge_provider.dart'; // Import ajouté
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ChallengeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -19,12 +24,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate, // Nécessaire pour Material widgets
-        GlobalWidgetsLocalizations.delegate,  // Nécessaire pour les textes de base
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('fr', 'FR'), // Français
-      ],
+      supportedLocales: const [Locale('fr', 'FR')],
       title: 'Mon Application',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -40,11 +43,10 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => MapUsers(),//LoginScreen(),
+        '/': (context) => LoginScreen(),
         '/registration': (context) => RegistrationScreen(),
-        '/EspaceChef': (context) => EspaceChef(userId: '',),
-        '/EspaceMembre': (context) => EspaceMembre(),
-
+        '/EspaceChef': (context) => EspaceChef(userId: ''),
+        '/EspaceMembre': (context) => EspaceMembre(userId: ''),
       },
     );
   }

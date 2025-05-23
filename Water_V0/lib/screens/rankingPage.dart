@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:water_v0/screens/BottomNavigationBar.dart';
 //import 'navigationBar.dart' as custom;
 
 class ClassementScreen extends StatefulWidget {
@@ -18,7 +20,7 @@ class _ClassementPageState extends State<ClassementScreen> {
   }
 
   Future<void> fetchClassement() async {
-    final response = await http.get(Uri.parse('http://192.168.1.17:5000'));
+    final response = await http.get(Uri.parse('http://127.0.0.1:5000'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -65,7 +67,14 @@ class _ClassementPageState extends State<ClassementScreen> {
                     );
                   },
                 ),
-        // bottomNavigationBar: custom.NavBar(theme: theme),
+        bottomNavigationBar: CustomBottomNavigationBar(
+        currentIndex: 0,
+        userId: "chef4@gmail.com",
+        isChef: true,
+        onTap: (index) {
+          // Gérer les changements d'index si nécessaire
+        },
+      ),
       ),
     );
   }

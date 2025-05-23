@@ -1,28 +1,32 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Ajouté pour kIsWeb
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:water_v0/screens/BottomNavigationBar.dart';
+import 'package:water_v0/screens/recup_id_famille.dart';
 import 'login_screen.dart';
 
 class FacturePage extends StatefulWidget {
-  const FacturePage({super.key, required this.userId});
+  const FacturePage({super.key, required this.userId,required this.isChef});
   final String userId;
+  final bool isChef;
 
+ 
   @override
   State<FacturePage> createState() => _FacturePageState();
 }
 
 class _FacturePageState extends State<FacturePage> {
   final List<PlatformFile> _uploadedFiles = []; // Changé pour PlatformFile
-  final String _serverUrl = "http://192.168.1.17:5000/extract_pdf";
-  final String _factureServerUrl = "http://192.168.1.17:5000/factures";
+  final String _serverUrl = "http://127.0.0.1:5000/extract_pdf";
+  final String _factureServerUrl = "http://127.0.0.1:5000/factures";
   Map<String, dynamic>? _jsonData;
   List<dynamic> _factures = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  
+  get userId => null;
 
   @override
   void initState() {
@@ -32,9 +36,8 @@ class _FacturePageState extends State<FacturePage> {
 
   Future<void> _uploadPDF() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('user_id') ?? widget.userId;
-
+      String? userId = await getIdUSer();
+      print('User ID: $userId');
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
@@ -48,7 +51,7 @@ class _FacturePageState extends State<FacturePage> {
 
         // Ajouter user_id comme champ dans la requête
         request.fields['user_id'] = userId ?? '';
-
+        print('User ID dans la requête: ${request.fields['user_id']}');
         if (kIsWeb) {
           request.files.add(http.MultipartFile.fromBytes(
             'file',
@@ -103,13 +106,13 @@ class _FacturePageState extends State<FacturePage> {
 
   Future<void> _fetchFactures() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final userId = prefs.getString('user_id') ?? widget.userId;
-
+      
+          String? userId = await getIdUSer();
       final response = await http.get(
         Uri.parse('$_factureServerUrl?user_id=$userId'),
         headers: {'Content-Type': 'application/json'},
       );
+      print('Factuuuuuuuuuuuuuuur Response status: $userId');
 
       if (response.statusCode == 200) {
         setState(() {
@@ -165,6 +168,7 @@ class _FacturePageState extends State<FacturePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+             if(widget.isChef) ...[
             GestureDetector(
               onTap: _uploadPDF,
               child: Container(
@@ -177,6 +181,7 @@ class _FacturePageState extends State<FacturePage> {
                     width: 2,
                   ),
                 ),
+                
                 child: Column(
                   children: [
                     Icon(
@@ -196,6 +201,7 @@ class _FacturePageState extends State<FacturePage> {
                 ),
               ),
             ),
+             ],
             const SizedBox(height: 30),
             // Affichage des données extraites du PDF
             filteredData.isNotEmpty
@@ -252,10 +258,14 @@ class _FacturePageState extends State<FacturePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _uploadPDF,
-        backgroundColor: theme.colorScheme.primary,
-        child: const Icon(Icons.add, color: Colors.white),
+      
+      bottomNavigationBar: CustomBottomNavigationBar(
+        currentIndex: 0,
+        userId: "",
+        isChef: true,
+        onTap: (index) {
+          // Gérer les changements d'index si nécessaire
+        },
       ),
     );
   }

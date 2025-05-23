@@ -7,6 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:water_v0/models/family.dart';
+import 'package:water_v0/screens/BottomNavigationBar.dart';
 import 'package:water_v0/screens/getUserLocalisation.dart';
 import 'package:water_v0/screens/rankingPage.dart';
 import 'package:flutter/scheduler.dart';
@@ -110,7 +111,7 @@ class _MapUsersState extends State<MapUsers> {
     );
     //print(await getUserId());
     final response = await http.get(
-      Uri.parse('http://192.168.1.17:5000/get_family/$userId'),
+      Uri.parse('http://127.0.0.1:5000/get_family/$userId'),
     );
 
     if (response.statusCode == 200) {
@@ -516,6 +517,14 @@ class _MapUsersState extends State<MapUsers> {
                     ],
                   ),
                 ),
+      ),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        currentIndex: 0,
+        userId: "chef4@gmail.com",
+        isChef: true,
+        onTap: (index) {
+          // Gérer les changements d'index si nécessaire
+        },
       ),
     );
   }

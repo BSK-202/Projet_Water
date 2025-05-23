@@ -1,10 +1,9 @@
-# registration.py
 import psycopg2
 import uuid
 from flask import jsonify
-from db import get_connection  # Changer la relative importation en absolue
+from db import get_connection
 
-is_chef_global = None  # Variable globale pour stocker le choix de l'utilisateur
+is_chef_global = None
 
 def selection(data):
     """Enregistre si l'utilisateur est un chef ou un membre"""
@@ -21,7 +20,6 @@ def selection(data):
     except Exception as e:
         print("❌ Erreur lors de la mise à jour :", str(e))
         return jsonify({"message": f"Erreur serveur : {str(e)}"}), 500
-
 
 def register(data):
     """Gère l'inscription d'un chef ou d'un membre"""
@@ -41,6 +39,48 @@ def register(data):
         
         cur = conn.cursor()
 
+        # Créer une entrée dans la table Habitude
+        cur.execute("""
+            INSERT INTO "Habitude" (
+                id_habitude,
+                nbr_litre_boire, 
+                duree_moyenne_douches, 
+                nbr_bains_par_mois, 
+                "prière", 
+                nbr_douches_semaine, 
+                duree_moyenne_bains, 
+                "cosommation cuisine", 
+                frequence_vidange_toilettes, 
+                frequence_lave_linge, 
+                frequence_lave_vaisselle, 
+                frequence_lavage_voiture, 
+                nbr_voiture
+            ) 
+            VALUES (
+                nextval('"Habitude_id_habitude_seq"'),
+                0, NULL, 0, NULL, 0, NULL, 0, 0, 0, 0, 0, 0
+            )
+            RETURNING id_habitude;
+        """)
+        id_habitude = cur.fetchone()[0]
+        print(f"✅ Entrée Habitude créée avec id: {id_habitude}")
+
+        # Créer une entrée dans la table Sociodémographique
+        cur.execute("""
+            INSERT INTO " Sociodémographique" (
+                "Revenu", 
+                "niveau education", 
+                "Sensibilisation Environnement", 
+                "Accès à un Plombier"
+            ) 
+            VALUES (
+                NULL, NULL, 0, 0
+            )
+            RETURNING "idSocio";
+        """)
+        id_socio = cur.fetchone()[0]
+        print(f"✅ Entrée Sociodémographique créée avec id: {id_socio}")
+
         if is_chef_global:  # Si l'utilisateur est un chef
             # Vérifier l'existence de la table 'Famille'
             cur.execute("""SELECT EXISTS (
@@ -55,22 +95,27 @@ def register(data):
 
             try:
                 # Insérer une nouvelle famille
-                cur.execute("""INSERT INTO "Famille" ("codeFamille", "scoreFamille", "nb_personne", "nomFamille")
-                    VALUES (%s, 0, 1, %s)
+                cur.execute("""INSERT INTO "Famille" ("codeFamille", "scoreFamille", "nomFamille")
+                    VALUES (%s, 0, %s)
                     RETURNING "codeFamille";""", (code_famille, data["nom"]))
                 id_famille = cur.fetchone()[0]
 
-                # Insérer le chef dans la base
-                cur.execute("""INSERT INTO "chef" ("nom", "prenom", "dateNaiss", "email", "password", "avatar", "IDfamille")
-                    VALUES (%s, %s, %s, %s, %s, %s, %s);""", (
-                        data["nom"], data["prenom"], data["dateNaiss"],
-                        data["email"], data["password"], data.get("avatar"), id_famille
-                    ))
-
-                
+                # Insérer le chef dans la base avec l'id_habitude, id_socio et l'avatar
+                cur.execute("""INSERT INTO "chef" (
+                    "nom", "prenom", "dateNaiss", "email", "password", "avatar", "IDfamille", "id_habitude", "score", "socio"
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s);""", (
+                    data["nom"], data["prenom"], data["dateNaiss"],
+                    data["email"], data["password"], data.get("avatar", None), 
+                    id_famille, id_habitude, id_socio
+                ))
 
                 conn.commit()
-                return jsonify({"message": "✅ Compte Chef créé", "code_famille": code_famille}), 201
+                return jsonify({
+                    "message": "✅ Compte Chef créé", 
+                    "code_famille": code_famille,
+                    "id_habitude": id_habitude,
+                    "id_socio": id_socio
+                }), 201
 
             except Exception as e:
                 conn.rollback()
@@ -79,14 +124,21 @@ def register(data):
 
         else:  # Si l'utilisateur est un membre
             try:
-                cur.execute("""INSERT INTO "Membre" ("nom", "prenom", "dateNaiss", "email", "password", "idFamille", "avatar")
-                    VALUES (%s, %s, %s, %s, %s, %s, %s);""", (
-                        data["nom"], data["prenom"], data["dateNaiss"],
-                        data["email"], data["password"], None, data.get("avatar")
-                    ))
+                # Insérer le membre avec l'id_habitude, id_socio et l'avatar
+                cur.execute("""INSERT INTO "Membre" (
+                    "nom", "prenom", "dateNaiss", "email", "password", "idFamille", "avatar", "id_habitude", "score", "socio"
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, %s);""", (
+                    data["nom"], data["prenom"], data["dateNaiss"],
+                    data["email"], data["password"], None, 
+                    data.get("avatar", None), id_habitude, id_socio
+                ))
 
                 conn.commit()
-                return jsonify({"message": "✅ Compte Membre créé"}), 201
+                return jsonify({
+                    "message": "✅ Compte Membre créé",
+                    "id_habitude": id_habitude,
+                    "id_socio": id_socio
+                }), 201
 
             except Exception as e:
                 conn.rollback()

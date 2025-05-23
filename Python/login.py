@@ -20,13 +20,15 @@ def login(data):
         chef = cur.fetchone()
 
         if chef:  # Si l'utilisateur est un chef
-            session["user_id"] = chef[2]  # chef[2] est l'email (index 2)
-            session["is_chef"] = True
-            session["id_famille"] = chef[4]  # chef[4] est "IDfamille"
-            session.modified = True  # Force la sauvegarde de la session avant retour
+             # Force la sauvegarde de la session avant retour
 
-            return jsonify({"message": "✅ Connexion réussie en tant que Chef", 
-                            "user_id": chef[2], "is_chef": True,"idFamille":chef[4]}), 200
+            if chef:  # Si l'utilisateur est un chef
+                return {
+                    "user_id": chef[2],  # email
+                    "is_chef": True,
+                    "idFamille": chef[4]  # IDfamille
+                }
+        
         
         # Si l'utilisateur n'est pas un chef, chercher dans la table 'membre'
         cur.execute("""SELECT nom, prenom, email, password, "idFamille" 
@@ -35,14 +37,11 @@ def login(data):
         membre = cur.fetchone()
 
         if membre:  # Si l'utilisateur est un membre
-            session["user_id"] = membre[2]  # membre[2] est l'email (index 2)
-            session["is_chef"] = False
-            session["id_famille"] = membre[4]  # membre[4] est "idFamille"
-            session.modified = True  # Force la sauvegarde de la session avant retour
-
-            return jsonify({"message": "✅ Connexion réussie en tant que Membre", 
-                            "user_id": membre[2], "is_chef": False,"idFamille":membre[4]}), 200
-        
+           return {
+                "user_id": membre[2],  # email
+                "is_chef": False,
+                "idFamille": membre[4]  # IDfamille
+            }
         return jsonify({"message": "❌ Identifiants incorrects"}), 401
 
     except Exception as e:

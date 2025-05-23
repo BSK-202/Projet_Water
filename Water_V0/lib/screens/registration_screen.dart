@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'step1_account_type.dart';
-import 'step3_personal_info.dart'; // Ensure this file exists and contains the Step2PersonalInfo widget
+import 'step2_choose_avatar.dart';
+import 'step3_personal_info.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -14,8 +15,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool? _isChef;
+  String? _selectedAvatar;
 
-  // Contrôleurs pour les champs de texte
+  // Text controllers
   final TextEditingController _familySizeController = TextEditingController(
     text: '1',
   );
@@ -23,20 +25,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _birthDateController = TextEditingController();
-
-  // Liste des types de logement
-  final List<String> _propertyTypes = [
-    'Appartement',
-    'Maison',
-    'Studio',
-    'Loft',
-    'Duplex',
-    'Autre',
-  ];
 
   @override
   void dispose() {
@@ -50,7 +42,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   }
 
   void _nextStep() {
-    if (_currentStep < 1) {
+    if (_currentStep < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -82,7 +74,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         backgroundColor: Color(0xFF2E7D32),
       ),
     );
-
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
@@ -90,9 +81,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   bool get _canProceedFromStep1 => _isChef != null;
 
-  bool get _canProceedFromStep2 {
-    return _familySizeController.text.isNotEmpty &&
-        _houseAreaController.text.isNotEmpty &&
+  bool get _canProceedFromStep2 => _selectedAvatar != null;
+
+  bool get _canProceedFromStep3 {
+    return _firstNameController.text.isNotEmpty &&
+        _lastNameController.text.isNotEmpty &&
+        _birthDateController.text.isNotEmpty &&
         _emailController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty &&
         _confirmPasswordController.text.isNotEmpty &&
@@ -133,11 +127,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     style: TextStyle(color: Colors.grey),
                   ),
                   const SizedBox(height: 20),
-                  // Indicateur d'étape
+                  // Step indicator
                   Row(
-                    children: List.generate(2, (index) {
+                    children: List.generate(3, (index) {
                       bool isActive = _currentStep >= index;
-                      bool isLast = index == 1;
+                      bool isLast = index == 2;
 
                       return Expanded(
                         child: Row(
@@ -147,9 +141,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               height: 30,
                               decoration: BoxDecoration(
                                 color:
-                                isActive
-                                    ? const Color(0xFF2E7D32)
-                                    : Colors.grey.shade300,
+                                    isActive
+                                        ? const Color(0xFF2E7D32)
+                                        : Colors.grey.shade300,
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -157,7 +151,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                   '${index + 1}',
                                   style: TextStyle(
                                     color:
-                                    isActive ? Colors.white : Colors.grey,
+                                        isActive ? Colors.white : Colors.grey,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -168,9 +162,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                 child: Container(
                                   height: 2,
                                   color:
-                                  _currentStep > index
-                                      ? const Color(0xFF2E7D32)
-                                      : Colors.grey.shade300,
+                                      _currentStep > index
+                                          ? const Color(0xFF2E7D32)
+                                          : Colors.grey.shade300,
                                 ),
                               ),
                           ],
@@ -187,7 +181,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       Text(
-                        'Informations personnelles',
+                        'Avatar',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                      Text(
+                        'Informations',
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
@@ -200,7 +198,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  // Étape 1: Type de compte
                   Step1AccountType(
                     isChef: _isChef,
                     onNext: _nextStep,
@@ -217,14 +214,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       });
                     },
                     onBackToLogin: () {
-                      // Rediriger l'utilisateur vers la page de login
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(builder: (_) => const LoginScreen()),
                       );
                     },
                   ),
-
-                  // Étape 2: Informations personnelles
+                  Step2ChooseAvatar(
+                    selectedAvatar: _selectedAvatar,
+                    onAvatarSelected: (avatar) {
+                      setState(() {
+                        _selectedAvatar = avatar;
+                      });
+                    },
+                    onNext: _nextStep,
+                    onBack: _previousStep,
+                    canProceed: _canProceedFromStep2,
+                  ),
                   Step3PersonalInfo(
                     firstNameController: _firstNameController,
                     lastNameController: _lastNameController,
@@ -232,7 +237,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     emailController: _emailController,
                     passwordController: _passwordController,
                     confirmPasswordController: _confirmPasswordController,
-                    canProceed: _canProceedFromStep2,
+                    selectedAvatar: _selectedAvatar,
+                    canProceed: _canProceedFromStep3,
                     onSubmit: _submitForm,
                     onBack: _previousStep,
                   ),
