@@ -1,6 +1,7 @@
 # app.py
 
 from flask import Flask, jsonify,request, session
+from getUserBadge import get_all_badges_for_user
 from get_profil import get_user_details
 from update_profile import update_profile
 from get_socio import get_socio_utilisateur
@@ -47,13 +48,28 @@ def make_session_permanent():
 
 #****************************************************
 
-@app.route('/', methods=['GET'])
+@app.route('/families', methods=['GET'])
 def classement():
     """Renvoie le classement des familles sous format JSON."""
     print("data sent")
     return jsonify(get_classement())
 
 
+# Route pour recuperer les badges d'un utilisateur par son email 
+@app.route('/badges/<string:email>', methods=['GET'])
+def get_badges(email):
+    """
+    Récupère tous les badges, indiquant ceux que l'utilisateur a débloqués ou pas,
+    avec les champs de progression si disponibles.
+    """
+    try:
+        badges = get_all_badges_for_user(email)
+        return jsonify(badges), 200
+    except Exception as e:
+        print("Erreur :", e)
+        return jsonify({"error": str(e)}), 500
+
+#****************************************************
 
 # Route API pour obtenir la famille d'un utilisateur par son ID
 @app.route('/get_family/<string:member_id>', methods=['GET'])

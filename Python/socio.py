@@ -38,7 +38,7 @@ def ischef(email):
             conn.close()
 
 def get_sociodemographique_column(id_socio):
-    """Retourne le nom de la colonne en fonction de l'ID pour la table Sociodémographique"""
+    """Retourne le nom de la colonne en fonction de l'ID pour la table Sociodemographique"""
     columns = {
         '13': "Revenu",
         '15': "niveau education",

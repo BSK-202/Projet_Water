@@ -46,7 +46,7 @@ def calculate_challenge(email):
         # 3) Récupérer la ligne Sociodémographique
         count_socio = 0
         if id_socio is not None:
-            cur.execute("SELECT * FROM \" Sociodémographique\" WHERE \"idSocio\" = %s", (id_socio,))
+            cur.execute("SELECT * FROM \" Sociodemographique\" WHERE \"idSocio\" = %s", (id_socio,))
             socio = cur.fetchone()
             socio_cols = [d[0] for d in cur.description]
             # compter tout sauf idSocio
@@ -177,7 +177,7 @@ def get_user_details(email):
                 FROM "chef" c
                 LEFT JOIN "Famille" f ON c."IDfamille" = f."codeFamille"
                 LEFT JOIN "Habitude" h ON c.id_habitude = h.id_habitude
-                LEFT JOIN " Sociodémographique" s ON c.socio = s."idSocio"
+                LEFT JOIN " Sociodemographique" s ON c.socio = s."idSocio"
                 WHERE c.email = %s
             """, (email,))
         else:

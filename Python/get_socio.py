@@ -100,7 +100,7 @@ def get_socio_utilisateur(data):
         id_socio = result[0]
 
         # Récupérer la ligne de la table Sociodémographique
-        cur.execute("""SELECT * FROM " Sociodémographique" WHERE "idSocio" = %s""", (id_socio,))
+        cur.execute("""SELECT * FROM " Sociodemographique" WHERE "idSocio" = %s""", (id_socio,))
         row = cur.fetchone()
         if not row:
             return jsonify({"error": "Aucune donnée sociodémographique trouvée"}), 404

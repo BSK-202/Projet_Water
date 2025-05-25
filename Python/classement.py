@@ -36,6 +36,10 @@ def get_classement():
     # Trier les familles par score décroissant
     classement.sort(key=lambda x: x["score"], reverse=True)
 
+    # Ajouter le rang (index + 1) à chaque famille
+    for index, famille in enumerate(classement):
+     famille["rank"] = index + 1
+
     cursor.close()
     conn.close()
     

@@ -67,7 +67,7 @@ def register(data):
 
         # Créer une entrée dans la table Sociodémographique
         cur.execute("""
-            INSERT INTO " Sociodémographique" (
+            INSERT INTO " Sociodemographique" (
                 "Revenu", 
                 "niveau education", 
                 "Sensibilisation Environnement", 
