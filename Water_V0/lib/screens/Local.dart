@@ -81,7 +81,7 @@ Future<Map<String, dynamic>> _checkLocalExistence() async {
   }
 
   try {
-    final uri = Uri.parse('http://127.0.0.1:5000/check-local?code_famille=$codeFamille');
+    final uri = Uri.parse('http://10.0.2.2:5000/check-local?code_famille=$codeFamille');
     print('Envoi de la requête à: ${uri.toString()}');
     
     final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -196,7 +196,7 @@ class _Step1LocationState extends State<Step1Location> {
     double latitude,
     double longitude,
   ) async {
-    final url = Uri.parse("http://127.0.0.1:5000/adresse");
+    final url = Uri.parse("http://10.0.2.2:5000/adresse");
 
     try {
       final response = await http.post(
@@ -889,7 +889,7 @@ class _Step2LocalDetailsState extends State<Step2LocalDetails> {
       "statut_occupation": _statutOccupation,
     };
 
-    final url = Uri.parse("http://127.0.0.1:5000/local");
+    final url = Uri.parse("http://10.0.2.2:5000/local");
 
     try {
       final response = await http

@@ -45,11 +45,11 @@ class ChallengesScreen extends StatelessWidget {
   final provider = Provider.of<ChallengeProvider>(context, listen: false);
   
   // Configuration des deux requêtes en parallèle
-  final habitsFuture = http.get(Uri.parse('http://127.0.0.1:5000/get_completed_habits'))
+  final habitsFuture = http.get(Uri.parse('http://10.0.2.2:5000/get_completed_habits'))
     .then((response) => _handleHabitsResponse(response, provider))
     .catchError((e) => _handleHabitsError(e));
 
-  final socioFuture = http.get(Uri.parse('http://127.0.0.1:5000/get_socio'))
+  final socioFuture = http.get(Uri.parse('http://10.0.2.2:5000/get_socio'))
     .then((response) => _handleSocioResponse(response, provider))
     .catchError((e) => _handleSocioError(e));
 

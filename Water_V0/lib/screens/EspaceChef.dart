@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:water_v0/screens/local_Info.dart';
 
-import 'package:water_v0/screens/neighborMap.dart';
+
 import 'package:water_v0/screens/recompense.dart';
+import 'package:water_v0/screens/user_map_page.dart';
+import 'package:water_v0/screens/user_ranking_page.dart';
 import 'package:water_v0/screens/video_list_item.dart';
 import 'package:water_v0/screens/water_level_indicator.dart';
 import 'BottomNavigationBar.dart';
@@ -43,7 +45,7 @@ class _EspaceChefState extends State<EspaceChef> {
         return;
       }
 
-      final uri = Uri.parse('http://127.0.0.1:5000/profile?email=$email');
+      final uri = Uri.parse('http://10.0.2.2:5000/profile?email=$email');
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -282,7 +284,7 @@ class _EspaceChefState extends State<EspaceChef> {
                     color: theme.colorScheme.secondary,
                     onTap: () {
                       Navigator.push(
-                          context, MaterialPageRoute(builder: (_) => const MapUsers()));
+                          context, MaterialPageRoute(builder: (_) => const UserMapPage()));
                     },
                   ),
                   FeatureCard.FeatureCard(
@@ -294,7 +296,7 @@ class _EspaceChefState extends State<EspaceChef> {
                     String? userId = await getUserId();
 
                 final response = await http.get(
-                  Uri.parse('http://127.0.0.1:5000/check-local?code_famille=$userId'),
+                  Uri.parse('http://10.0.2.2:5000/check-local?code_famille=$userId'),
                 );
 
                 if (response.statusCode == 200) {
@@ -371,7 +373,7 @@ class _EspaceChefState extends State<EspaceChef> {
         onTap: (i) {/* à gérer si besoin */},
       ),
     );
-  }
+  } 
 
   Widget _buildUsageRow(
           BuildContext context, String text, IconData icon, Color color) =>

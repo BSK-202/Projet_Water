@@ -44,8 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // URLs des API
-    final habitsUrl = Uri.parse('http://127.0.0.1:5000/get_completed_habits');
-    final socioUrl = Uri.parse('http://127.0.0.1:5000/get_socio');
+    final habitsUrl = Uri.parse('http://10.0.2.2:5000/get_completed_habits');
+    final socioUrl = Uri.parse('http://10.0.2.2:5000/get_socio');
 
     try {
       // Exécuter les deux requêtes en parallèle

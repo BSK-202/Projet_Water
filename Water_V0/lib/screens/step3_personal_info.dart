@@ -101,7 +101,7 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://127.0.0.1:5000/register");
+    final url = Uri.parse("http://10.0.2.2:5000/register");
     final DateFormat serverFormat = DateFormat('yyyy-MM-dd');
     DateTime parsedDate = DateFormat('dd/MM/yyyy').parse(widget.birthDateController.text);
     String formattedDate = serverFormat.format(parsedDate);

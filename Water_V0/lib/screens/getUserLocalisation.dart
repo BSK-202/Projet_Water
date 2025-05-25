@@ -4,7 +4,7 @@ import 'package:water_v0/models/family.dart';
 
 class ApiService {
   static const String _baseUrl =
-      'http://127.0.0.1:5000'; // Adresse de mon servers
+      'http://10.0.2.2:5000'; // Adresse de mon servers
 
   // Fonction pour récupérer les utilisateurs
   static Future<List<Family>> fetchUsers() async {

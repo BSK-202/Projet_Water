@@ -20,8 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   // 🛠️ Assurez-vous que l'URL est correcte pour votre environnement
-  // final String _apiUrl = "http://192.168.1.17:5000/login"; // Pour l'émulateur Android
-  final String _apiUrl = "http://127.0.0.1:5000/login";
+   final String _apiUrl = "http://10.0.2.2:5000/login"; // Pour l'émulateur Android
+  //final String _apiUrl = "http://127.0.0.1:5000/login";
   
   get userId => null;
   

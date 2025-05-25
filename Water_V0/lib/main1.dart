@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:water_v0/providers/user_provider.dart';
 import 'package:water_v0/screens/EspaceMembre.dart';
 import 'package:water_v0/screens/neighborMap.dart';
-import 'package:water_v0/services/database_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/registration_screen.dart';
 import 'screens/EspaceChef.dart';
@@ -23,24 +21,8 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) => UserProvider(
-            // Choisir le service de base de données
-            ApiDatabaseService(
-              baseUrl: 'http://10.0.2.2:5000', // Remplacez par votre URL
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                // 'Authorization': 'Bearer your-token', // Si nécessaire
-              },
-            ),            
-          ),
-        ),
-      ],
-      child:MaterialApp(
+  Widget build(BuildContext context) {
+    return MaterialApp(
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -66,9 +48,7 @@ class MyApp extends StatelessWidget {
         '/EspaceChef': (context) => EspaceChef(userId: ''),
         '/EspaceMembre': (context) => EspaceMembre(userId: ''),
       },
-    ),
- 
     );
+ 
   }
-
 }

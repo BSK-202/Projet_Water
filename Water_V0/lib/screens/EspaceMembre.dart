@@ -6,6 +6,7 @@ import 'package:water_v0/screens/local_Info.dart';
 
 import 'package:water_v0/screens/neighborMap.dart';
 import 'package:water_v0/screens/recompense.dart';
+import 'package:water_v0/screens/user_map_page.dart';
 import 'package:water_v0/screens/video_list_item.dart';
 import 'package:water_v0/screens/water_level_indicator.dart';
 import 'BottomNavigationBar.dart';
@@ -46,7 +47,7 @@ class _EspaceMembreState extends State<EspaceMembre> {
         return;
       }
 
-      final uri = Uri.parse('http://127.0.0.1:5000/profile?email=$email');
+      final uri = Uri.parse('http://10.0.2.2:5000/profile?email=$email');
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -288,7 +289,7 @@ class _EspaceMembreState extends State<EspaceMembre> {
                       color: theme.colorScheme.secondary,
                       onTap: () {
                         Navigator.push(
-                            context, MaterialPageRoute(builder: (_) => const MapUsers()));
+                            context, MaterialPageRoute(builder: (_) => const UserMapPage()));
                       },
                     ),
                      FeatureCard.FeatureCard(
@@ -309,7 +310,7 @@ class _EspaceMembreState extends State<EspaceMembre> {
                       
                       // Appel à l'API pour vérifier le local
                 final response = await http.get(
-                  Uri.parse('http://127.0.0.1:5000/check-local?code_famille=${userData!['id_famille']}'),
+                  Uri.parse('http://10.0.2.2:5000/check-local?code_famille=${userData!['id_famille']}'),
                 );
 
                 if (response.statusCode == 200) {

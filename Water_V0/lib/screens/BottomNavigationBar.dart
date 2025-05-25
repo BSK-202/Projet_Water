@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:water_v0/screens/EspaceChef.dart';
 import 'package:water_v0/screens/EspaceMembre.dart';
+import 'package:water_v0/screens/badges_screen.dart';
 import 'package:water_v0/screens/home_screen.dart';
 import 'package:water_v0/screens/profil.dart';
 
@@ -98,7 +99,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => HomeScreen(), // À remplacer par BadgesScreen()
+                builder: (context) => BadgesScreen(), // À remplacer par BadgesScreen()
               ),
             );
             break;

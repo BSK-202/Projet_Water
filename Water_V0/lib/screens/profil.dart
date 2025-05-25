@@ -37,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       
       final response = await http
-          .get(Uri.parse('http://127.0.0.1:5000/profile?email=$email'))
+          .get(Uri.parse('http://10.0.2.2:5000/profile?email=$email'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {

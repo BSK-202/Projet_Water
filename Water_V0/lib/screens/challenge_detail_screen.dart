@@ -44,7 +44,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Future<void> fetchCompletedHabits() async {
   if (userId == null) return;
   setState(() => _isLoading = true);
-  final url = Uri.parse('http://127.0.0.1:5000/get_completed_habits');
+  final url = Uri.parse('http://10.0.2.2:5000/get_completed_habits');
   try {
     final res = await http.post(
       url,
@@ -75,7 +75,7 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   Future<void> fetchSocioData() async {
     if (userId == null) return;
     setState(() => _isLoading = true);
-    final url = Uri.parse('http://127.0.0.1:5000/get_socio');
+    final url = Uri.parse('http://10.0.2.2:5000/get_socio');
     try {
       final res = await http.post(
         url,
@@ -115,8 +115,8 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     provider.updateChallenge(widget.challenge.id, _userInput!);
 
     final path = widget.challenge.category == 'sociodemographic'
-      ? 'http://127.0.0.1:5000/socio'
-      : 'http://127.0.0.1:5000/habits';
+      ? 'http://10.0.2.2:5000/socio'
+      : 'http://10.0.2.2:5000/habits';
     final payload = {
       'id': widget.challenge.id,
       'category': widget.challenge.category,

@@ -88,7 +88,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       // Créer la requête multipart pour inclure l'image si elle a été sélectionnée
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:5000/update_profile'),
+        Uri.parse('http://10.0.2.2:5000/update_profile'),
       );
 
       // Ajouter les champs de données
