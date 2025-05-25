@@ -20,7 +20,9 @@ class Step3PersonalInfo extends StatefulWidget {
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
-    required this.onBack, required bool canProceed, required void Function() onSubmit,
+    required this.onBack,
+    required bool canProceed,
+    required void Function() onSubmit,
   });
 
   @override
@@ -32,7 +34,6 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
   bool isLoading = false; // Indicateur de chargement
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
-
 
   @override
   void initState() {
@@ -60,17 +61,20 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
     setState(() {
       canProceed =
           widget.firstNameController.text.isNotEmpty &&
-              widget.lastNameController.text.isNotEmpty &&
-              widget.birthDateController.text.isNotEmpty &&
-              _isValidEmail(widget.emailController.text) &&
-              widget.passwordController.text.isNotEmpty &&
-              widget.confirmPasswordController.text.isNotEmpty &&
-              widget.passwordController.text == widget.confirmPasswordController.text;
+          widget.lastNameController.text.isNotEmpty &&
+          widget.birthDateController.text.isNotEmpty &&
+          _isValidEmail(widget.emailController.text) &&
+          widget.passwordController.text.isNotEmpty &&
+          widget.confirmPasswordController.text.isNotEmpty &&
+          widget.passwordController.text ==
+              widget.confirmPasswordController.text;
     });
   }
 
   bool _isValidEmail(String email) {
-    final emailRegEx = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailRegEx = RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    );
     return emailRegEx.hasMatch(email);
   }
 
@@ -86,7 +90,9 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
 
     if (pickedDate != null) {
       setState(() {
-        widget.birthDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+        widget.birthDateController.text = DateFormat(
+          'dd/MM/yyyy',
+        ).format(pickedDate);
       });
     }
   }
@@ -97,19 +103,22 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://192.168.1.17:5000/register"); // Remplace par l'URL de ton serveur Flask
+    final url = Uri.parse(
+      "http://127.0.0.1:5000/register",
+    ); // Remplace par l'URL de ton serveur Flask
     final DateFormat serverFormat = DateFormat('yyyy-MM-dd');
-    DateTime parsedDate = DateFormat('dd/MM/yyyy').parse(widget.birthDateController.text);
+    DateTime parsedDate = DateFormat(
+      'dd/MM/yyyy',
+    ).parse(widget.birthDateController.text);
     String formattedDate = serverFormat.format(parsedDate);
 
     final Map<String, dynamic> userData = {
       "nom": widget.firstNameController.text,
       "prenom": widget.lastNameController.text,
-      "dateNaiss": formattedDate,  // Format correct pour PostgreSQL
+      "dateNaiss": formattedDate, // Format correct pour PostgreSQL
       "email": widget.emailController.text,
       "password": widget.passwordController.text,
     };
-
 
     try {
       final response = await http.post(
@@ -124,14 +133,14 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
         );
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erreur : ${response.body}")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Erreur : ${response.body}")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur réseau : $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erreur réseau : $e")));
     } finally {
       setState(() {
         isLoading = false;
@@ -163,14 +172,19 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
               _buildTextField('Prénom', widget.lastNameController),
               const SizedBox(height: 16),
 
-              const Text('Date de naissance', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text(
+                'Date de naissance',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: widget.birthDateController,
                 readOnly: true,
                 decoration: InputDecoration(
                   hintText: 'JJ/MM/AAAA',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.calendar_today),
                     onPressed: () => _selectDate(context),
@@ -179,13 +193,20 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
               ),
               const SizedBox(height: 16),
 
-              _buildTextField('Email', widget.emailController, keyboardType: TextInputType.emailAddress),
+              _buildTextField(
+                'Email',
+                widget.emailController,
+                keyboardType: TextInputType.emailAddress,
+              ),
               const SizedBox(height: 16),
 
               _buildPasswordField('Mot de passe', widget.passwordController),
               const SizedBox(height: 16),
 
-              _buildPasswordField('Confirmer le mot de passe', widget.confirmPasswordController),
+              _buildPasswordField(
+                'Confirmer le mot de passe',
+                widget.confirmPasswordController,
+              ),
               const SizedBox(height: 24),
 
               Row(
@@ -198,12 +219,16 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
                   ElevatedButton(
                     onPressed: canProceed ? _submitData : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: canProceed ? Colors.green : Colors.grey.shade300,
+                      backgroundColor:
+                          canProceed ? Colors.green : Colors.grey.shade300,
                       foregroundColor: Colors.white,
                     ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Créer mon compte'),
+                    child:
+                        isLoading
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : const Text('Créer mon compte'),
                   ),
                 ],
               ),
@@ -214,7 +239,11 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
@@ -229,14 +258,19 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
     return TextField(
       controller: controller,
       keyboardType: TextInputType.text,
-      obscureText: isConfirmPasswordVisible ? !isConfirmPasswordVisible : !isPasswordVisible,
+      obscureText:
+          isConfirmPasswordVisible
+              ? !isConfirmPasswordVisible
+              : !isPasswordVisible,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         suffixIcon: IconButton(
           icon: Icon(
             isConfirmPasswordVisible
-                ? (isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off)
+                ? (isConfirmPasswordVisible
+                    ? Icons.visibility
+                    : Icons.visibility_off)
                 : (isPasswordVisible ? Icons.visibility : Icons.visibility_off),
           ),
           onPressed: () {

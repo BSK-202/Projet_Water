@@ -4,6 +4,8 @@ import 'dart:convert';
 //import 'navigationBar.dart' as custom;
 
 class ClassementScreen extends StatefulWidget {
+  const ClassementScreen({super.key});
+
   @override
   _ClassementPageState createState() => _ClassementPageState();
 }
@@ -18,7 +20,7 @@ class _ClassementPageState extends State<ClassementScreen> {
   }
 
   Future<void> fetchClassement() async {
-    final response = await http.get(Uri.parse('http://192.168.1.17:5000'));
+    final response = await http.get(Uri.parse('http://127.0.0.1:5000'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -78,7 +80,7 @@ class ClassementCard extends StatelessWidget {
   final int score;
   final String? avatarUrl; // Ajoutez l'URL de l'avatar
 
-  const ClassementCard({
+  const ClassementCard({super.key, 
     required this.rank,
     required this.name,
     required this.username,

@@ -12,7 +12,6 @@ import 'package:water_v0/screens/rankingPage.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:water_v0/screens/recup_id_famille.dart';
 
 import 'user_details_widget.dart';
 
@@ -26,7 +25,7 @@ class _MapUsersState extends State<MapUsers> {
   final Completer<GoogleMapController> _controller = Completer();
   static LatLng _initialPosition = LatLng(0, 0);
   static List<Family> families = [];
-  static Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
+  static final Map<MarkerId, Marker> _markers = <MarkerId, Marker>{};
   String? _mapStyle;
   bool _isLoading = true;
   Family? _selectedUser;
@@ -38,7 +37,7 @@ class _MapUsersState extends State<MapUsers> {
   void initState() {
     super.initState();
     // _loadMapStyle();
-    SchedulerBinding.instance?.addPostFrameCallback((_) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       rootBundle.loadString('assets/map_style.json').then((string) {
         _mapStyle = string;
         print(
@@ -110,7 +109,7 @@ class _MapUsersState extends State<MapUsers> {
     );
     //print(await getUserId());
     final response = await http.get(
-      Uri.parse('http://192.168.1.17:5000/get_family/$userId'),
+      Uri.parse('http://127.0.0.1:5000/get_family/$userId'),
     );
 
     if (response.statusCode == 200) {

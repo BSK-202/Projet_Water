@@ -65,7 +65,7 @@ class UserDetailsWidget extends StatelessWidget {
                       'Score: ${user.score}',
                       style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                     ),
-                    if (user.avatar != null && user.avatar!.isNotEmpty)
+                    if (user.avatar.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(

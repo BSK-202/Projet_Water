@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart'; // Ajouté pour kIsWeb
 import 'package:file_picker/file_picker.dart';
@@ -17,8 +16,8 @@ class FacturePage extends StatefulWidget {
 
 class _FacturePageState extends State<FacturePage> {
   final List<PlatformFile> _uploadedFiles = []; // Changé pour PlatformFile
-  final String _serverUrl = "http://192.168.1.17:5000/extract_pdf";
-  final String _factureServerUrl = "http://192.168.1.17:5000/factures";
+  final String _serverUrl = "http://127.0.0.1:5000/extract_pdf";
+  final String _factureServerUrl = "http://127.0.0.1:5000/factures";
   Map<String, dynamic>? _jsonData;
   List<dynamic> _factures = [];
   bool _isLoading = true;

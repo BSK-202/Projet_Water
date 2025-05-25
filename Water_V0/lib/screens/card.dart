@@ -7,12 +7,12 @@ class FeatureCard extends StatelessWidget {
   final VoidCallback? onTap; // Add onTap parameter
 
   const FeatureCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.color,
     this.onTap, // Initialize onTap
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
