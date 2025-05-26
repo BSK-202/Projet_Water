@@ -65,7 +65,7 @@ def register(data):
         id_habitude = cur.fetchone()[0]
         print(f"✅ Entrée Habitude créée avec id: {id_habitude}")
 
-        # Créer une entrée dans la table Sociodémographique
+        # Créer une entrée dans la table Sociodemographique
         cur.execute("""
             INSERT INTO " Sociodemographique" (
                 "Revenu", 
@@ -79,7 +79,7 @@ def register(data):
             RETURNING "idSocio";
         """)
         id_socio = cur.fetchone()[0]
-        print(f"✅ Entrée Sociodémographique créée avec id: {id_socio}")
+        print(f"✅ Entrée Sociodemographique créée avec id: {id_socio}")
 
         if is_chef_global:  # Si l'utilisateur est un chef
             # Vérifier l'existence de la table 'Famille'

@@ -1,5 +1,6 @@
 from flask import jsonify, session
 from db import get_connection
+from notification import check_and_notify_chef  # Import the notification function
 
 def login(data):
     """Gère la connexion d'un utilisateur (chef ou membre)"""
@@ -23,6 +24,7 @@ def login(data):
              # Force la sauvegarde de la session avant retour
 
             if chef:  # Si l'utilisateur est un chef
+                check_and_notify_chef(chef[2]) 
                 return {
                     "user_id": chef[2],  # email
                     "is_chef": True,

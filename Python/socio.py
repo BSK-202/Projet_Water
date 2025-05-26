@@ -75,7 +75,7 @@ def receive_sociodemographique(data):
         column_name = get_sociodemographique_column(socio_id)
         if not column_name:
             print(f"❌ ID sociodemographique non valide: {socio_id}")
-            return jsonify({"error": "ID sociodémographique non valide"}), 400
+            return jsonify({"error": "ID sociodemographique non valide"}), 400
 
         print(f"🔹 column_name: {column_name}")
 
@@ -95,12 +95,12 @@ def receive_sociodemographique(data):
         result = cur.fetchone()
         if not result:
             print("❌ Données sociodemographiques non trouvées")
-            return jsonify({"error": "Données sociodémographiques de l'utilisateur non trouvées"}), 404
+            return jsonify({"error": "Données sociodemographiques de l'utilisateur non trouvées"}), 404
         
         id_socio = result[0]
         print(f"🔹 id_socio: {id_socio}")
 
-        # Mettre à jour la donnée sociodémographique
+        # Mettre à jour la donnée sociodemographique
         update_query = f"""UPDATE " Sociodemographique" SET "{column_name}" = %s 
                            WHERE "idSocio" = %s"""
         print(f"🔹 Requête UPDATE: {update_query}, Valeurs: {value}, {id_socio}")
@@ -130,7 +130,7 @@ def receive_sociodemographique(data):
     except Exception as e:
         if conn:
             conn.rollback()
-        print(f"❌ Erreur lors de la mise à jour des données sociodémographiques: {str(e)}")
+        print(f"❌ Erreur lors de la mise à jour des données sociodemographiques: {str(e)}")
         return jsonify({"error": f"Erreur serveur: {str(e)}"}), 500
 
     finally:

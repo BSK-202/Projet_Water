@@ -43,7 +43,7 @@ def calculate_challenge(email):
                 if val is not None and val != 0 and val != '0':
                     count_hab += 1
 
-        # 3) Récupérer la ligne Sociodémographique
+        # 3) Récupérer la ligne Sociodemographique
         count_socio = 0
         if id_socio is not None:
             cur.execute("SELECT * FROM \" Sociodemographique\" WHERE \"idSocio\" = %s", (id_socio,))
@@ -192,7 +192,7 @@ def get_user_details(email):
                 FROM "Membre" m
                 LEFT JOIN "Famille" f ON m."idFamille" = f."codeFamille"
                 LEFT JOIN "Habitude" h ON m.id_habitude = h.id_habitude
-                LEFT JOIN " Sociodémographique" s ON m.socio = s."idSocio"
+                LEFT JOIN " Sociodemographique" s ON m.socio = s."idSocio"
                 WHERE m.email = %s
             """, (email,))
 

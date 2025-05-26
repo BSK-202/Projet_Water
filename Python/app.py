@@ -12,6 +12,8 @@ from classement import get_classement
 from db import get_connection
 from userFamily import get_family_by_member
 from recompense import calculate_rewards
+
+from notification import get_notifications, send_invitation, check_and_notify_chef, get_unread_notifications  # Import notification functions
 #****************************************************
 from datetime import timedelta
 from flask_cors import CORS
@@ -70,6 +72,105 @@ def get_badges(email):
         return jsonify({"error": str(e)}), 500
 
 #****************************************************
+#****************************************************
+# Notification Routes
+
+@app.route('/send_invitation', methods=['POST'])
+def handle_send_invitation():
+    print("send_invitation called")
+    return send_invitation()
+
+@app.route('/check_notifications', methods=['GET'])
+def handle_check_notifications():
+    print("check_notifications called")
+    return check_and_notify_chef()
+
+@app.route('/get_unread_notifications', methods=['GET'])
+def handle_get_unread_notifications():
+    print("get_unread_notifications called")
+    return get_unread_notifications()
+
+
+@app.route('/get_notifications', methods=['GET'])
+def handle_get_notifications():
+    return get_notifications()
+
+@app.route('/invitation_action', methods=['POST'])
+def invitation_action():
+    data = request.get_json()
+    member_email = data["memberEmail"]
+    action = data["action"]  # "accept" or "ignore"
+    notif_id = data["notificationId"]
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Fetch chef_email (senderId) from Notification table using notif_id
+        cursor.execute('SELECT "senderId" FROM "Notification" WHERE "idNotification" = %s', (notif_id,))
+        chef_row = cursor.fetchone()
+        chef_email = chef_row[0] if chef_row else None
+
+        print('member_email:', member_email)
+        print('chef_email:', chef_email)
+        print('action:', action)
+        print('notif_id:', notif_id)
+
+        if not chef_email:
+            return jsonify({"status": "error", "message": "Chef email not found in notification"}), 404
+
+        if action == "accept":
+            # Get family of chef
+            cursor.execute('SELECT "IDfamille" FROM chef WHERE email = %s', (chef_email,))
+            family = cursor.fetchone()
+            if not family:
+                return jsonify({"status": "error", "message": "Famille introuvable"}), 404
+            family_id = family[0]
+            # Update member's family
+            cursor.execute('UPDATE "Membre" SET "idFamille" = %s WHERE email = %s', (family_id, member_email))
+            # Update invitation status to accepted
+            cursor.execute(
+                'UPDATE "Invitation" SET status = %s, "updatedAt" = CURRENT_TIMESTAMP WHERE "senderId" = %s AND "receiverId" = %s AND status = %s',
+                ("accepted", chef_email, member_email, "pending")
+            )
+            cursor.execute(
+                '''
+                INSERT INTO "Notification"
+                ("senderId", "receiverId", type, title, message, status, "createdAt", "updatedAt", "senderType")
+                VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, %s)
+                ''',
+                (
+                    member_email,               # senderId: the member who accepted
+                    chef_email,                 # receiverId: the chef who sent the invite
+                    "invitation_accepted",      # type
+                    "Invitation acceptée",      # title
+                    f"{member_email} a accepté votre invitation à rejoindre la famille.", # message
+                    "pending",                  # status
+                    "member"                    # senderType
+                )
+            )
+        else:  # action == "ignore"
+            # Update invitation status to ignored
+            cursor.execute(
+                'UPDATE "Invitation" SET status = %s, "updatedAt" = CURRENT_TIMESTAMP WHERE "senderId" = %s AND "receiverId" = %s AND status = %s',
+                ("ignored", chef_email, member_email, "pending")
+            )
+        # Mark notification as "read"
+        cursor.execute('UPDATE "Notification" SET status = %s WHERE "idNotification" = %s', ("accepted" if action=="accept" else "ignored", notif_id))
+        conn.commit()
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/mark_notification_vued', methods=['POST'])
+def mark_notification_vued_route():
+    from notification import mark_notification_vued
+    return mark_notification_vued()
+
+#****************************************************
 
 # Route API pour obtenir la famille d'un utilisateur par son ID
 @app.route('/get_family/<string:member_id>', methods=['GET'])
@@ -98,7 +199,7 @@ def login_route():
     """Route pour gérer la demande de connexion"""
     data = request.get_json()
     data_user=login(data)
-    session["user_id"] =  data_user["user_id"]# chef[2] est l'email (index 2)
+    session["user_id"] = data_user["user_id"] # chef[2] est l'email (index 2)
     session["is_chef"] = data_user["is_chef"]  # # chef[3] est le mot de passe (index 3)
     session["id_famille"] =data_user["idFamille"] 
     session.modified = True 
@@ -645,5 +746,37 @@ def update_local():
             "success": False,
             "message": "Échec de la mise à jour"
    }),500
+    
+   ## route pour recuperer la localisation d'une famille
+   # @app.route('/get_location', methods=['GET'])
+@app.route('/get_location/<string:code_famille>', methods=['GET'])
+def get_location(code_famille):   
+    if not code_famille:
+        return jsonify({"error": "Code famille manquant"}), 400
+    try:
+        cursor.execute("""
+            SELECT a.ville, a.quartier, a.region, 
+                   a.localisation[0] as latitude, 
+                   a.localisation[1] as longitude
+            FROM "Adresse" a
+            JOIN "Local" l ON a.adresse = l.adress
+            WHERE l."codeFamille" = %s
+            LIMIT 1
+        """, (code_famille,))
+        
+        location = cursor.fetchone()
+        
+        if location:
+            return jsonify({                                  
+                    "latitude": float(location[3]),
+                    "longitude": float(location[4])                
+            })
+        else:
+            return jsonify({"has_location": False})
+    except Exception as e:
+        print(f"Erreur dans get_location: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

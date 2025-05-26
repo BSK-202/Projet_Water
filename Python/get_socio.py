@@ -95,15 +95,15 @@ def get_socio_utilisateur(data):
         
         result = cur.fetchone()
         if not result:
-            return jsonify({"error": "Données sociodémographiques non trouvées pour l'utilisateur"}), 404
+            return jsonify({"error": "Données sociodemographiques non trouvées pour l'utilisateur"}), 404
 
         id_socio = result[0]
 
-        # Récupérer la ligne de la table Sociodémographique
+        # Récupérer la ligne de la table Sociodemographique
         cur.execute("""SELECT * FROM " Sociodemographique" WHERE "idSocio" = %s""", (id_socio,))
         row = cur.fetchone()
         if not row:
-            return jsonify({"error": "Aucune donnée sociodémographique trouvée"}), 404
+            return jsonify({"error": "Aucune donnée sociodemographique trouvée"}), 404
 
         # Récupérer les noms des colonnes
         colnames = [desc[0] for desc in cur.description]

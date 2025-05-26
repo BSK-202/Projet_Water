@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:water_v0/screens/BottomNavigationBar.dart';
@@ -40,9 +43,10 @@ class _UserMapPageState extends State<UserMapPage> with TickerProviderStateMixin
 
   Future<void> _initializeAsync() async {
     CurrentFamilyID = await getUserId();
-    print('🔹 Current Family ID: $CurrentFamilyID');
+    print('🔹 **************************Current Family ID: $CurrentFamilyID');
     // Obtenir la position actuelle de l'utilisateur
     await getCurrentLocation();
+    print('🔹 **************************Current Location: $_currentLocation');
   }
 
   void _initAnimations() {
@@ -126,27 +130,45 @@ class _UserMapPageState extends State<UserMapPage> with TickerProviderStateMixin
   }
 //get current location cherchant dans userProvider
   
-  Future<void> getCurrentLocation() async {
-  final userProvider = Provider.of<UserProvider>(context, listen: false);
-  try {
-    User? user;
+   Future<void> getCurrentLocation() async {
+    if (CurrentFamilyID == null || CurrentFamilyID!.isEmpty) return;
     try {
-      user = userProvider.users.firstWhere(
-        (user) => user.id == CurrentFamilyID,
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5000/get_location/$CurrentFamilyID'),
       );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['latitude'] != null && data['longitude'] != null) {
+          setState(() {
+            _currentLocation = LatLng(
+              data['latitude'] as double,
+              data['longitude'] as double,
+            );
+          });
+        }
+        else {
+          debugPrint('Localisation non trouvée pour l\'ID de famille: $CurrentFamilyID');
+          setState(() {
+            _currentLocation = LatLng(              
+              -7.6316672, // Valeur par défaut si la récupération échoue
+              33.5675392,// Valeur par défaut si la récupération échoue
+            );
+          });
+        }
+      } else {
+        debugPrint('Erreur lors de la récupération de la localisation: ${response.statusCode}');
+         setState(() {
+            _currentLocation = LatLng(              
+              -7.6316672, // Valeur par défaut si la récupération échoue
+              33.5675392,// Valeur par défaut si la récupération échoue
+            );
+          });
+      }
     } catch (e) {
-      user = null;
+      debugPrint('Erreur lors de la récupération de la localisation: $e');
     }
-    if (user != null) {
-      _currentLocation = LatLng(user.latitude, user.longitude);
-      print('🔹 *******Current Location*******: ${_currentLocation?.latitude}, ${_currentLocation?.longitude}');
-    } else {
-      print('❌ Utilisateur non trouvé pour CurrentFamilyID: $CurrentFamilyID');
-    }
-  } catch (e) {
-    print('❌ Erreur lors de la recherche de la localisation: $e');
   }
-}
+// ...e
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +198,7 @@ class _UserMapPageState extends State<UserMapPage> with TickerProviderStateMixin
               FlutterMap(
                 mapController: _mapController,
                 options: MapOptions(
-                  center: const LatLng(33.696092384666365, -7.365948778759837),
+                  center: _currentLocation ?? const LatLng(48.8566, 2.3522), // Paris par défaut
                   zoom: 12.0,
                   maxZoom: 18.0,
                   minZoom: 8.0,

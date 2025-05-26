@@ -16,6 +16,12 @@ import 'Local.dart';
 import 'card.dart' as FeatureCard;
 import 'recup_id_famille.dart'; // votre helper getIdUser()
 
+import 'NotificationIcon.dart';
+import 'NotificationPage.dart';
+import 'InviteMemberPage.dart';
+import 'TopNotificationBanner.dart';
+
+
 class EspaceChef extends StatefulWidget {
 
  const EspaceChef({super.key, required this.userId});
@@ -27,17 +33,93 @@ class _EspaceChefState extends State<EspaceChef> {
   Map<String, dynamic>? userData;
   bool isLoading = true;
   String? errorMessage;
+  int unreadNotifications = 0; // Initial unread notifications count
+  int currentIndex = 0; // Index for managing the bottom navigation bar
+  String? email = '';
+/********************************************** */
+// Fetch unread notifications count from the backend
+  Future<void> fetchUnreadNotifications() async {
+    email = await getIdUSer(); // Ensure email is fetched before making the request
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:5000/get_unread_notifications?userId=${email}',
+        ),
+      );
+      print('UnreadCount Response: ${response.body}'); // Debug log
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        int count = 0;
+        if (data["unreadCount"] is int) {
+          count = data["unreadCount"];
+        } else if (data["unreadCount"] is String) {
+          count = int.tryParse(data["unreadCount"]) ?? 0;
+        } else {
+          print(
+            'unreadCount is of unexpected type: ${data["unreadCount"].runtimeType}',
+          );
+        }
 
+        // If new unread notifications appear, show the banner
+        if (count > unreadNotifications) {
+          showTopNotification("Vous avez une nouvelle notification !", () {
+            Navigator.of(context).pop(); // dismiss banner
+            setState(() {
+              currentIndex = 3; // or navigate to notification page
+            });
+          });
+        }
+
+        setState(() {
+          unreadNotifications = count;
+        });
+      } else {
+        print(
+          'Failed to fetch unread notifications (status ${response.statusCode})',
+        );
+      }
+    } catch (e) {
+      print('Error fetching unread notifications: $e');
+    }
+  }
+  
+void showTopNotification(String message, VoidCallback onTap) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: '',
+      transitionDuration: Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.topCenter,
+          child: TopNotificationBanner(message: message, onTap: onTap),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, -1),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        );
+      },
+    );
+  }
+
+
+/************************************************ */
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    fetchUnreadNotifications();// Fetch unread notifications count
   }
 
   Future<void> _loadUserData() async {
     try {
-      final email = await getIdUSer(); 
-      if (email == null || email.isEmpty) {
+      email = await getIdUSer(); 
+      if (email == null || email== '') {
         setState(() {
           errorMessage = 'Veuillez vous connecter';
           isLoading = false;
@@ -136,8 +218,8 @@ class _EspaceChefState extends State<EspaceChef> {
                     ],
                   ),
                   Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
+                    /*decoration: BoxDecoration(
+                      //color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -146,12 +228,46 @@ class _EspaceChefState extends State<EspaceChef> {
                           offset: const Offset(0, 2),
                         ),
                       ],
+                    ),*/
+                    child: Row(                    
+                    children: [
+                      // Notification Icon
+                     NotificationIcon(
+                      unreadNotifications: unreadNotifications,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NotificationPage(
+                              userEmail: email ?? '',
+                              isMember: false,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      color: theme.colorScheme.primary,
-                      onPressed: () {},
+                    const SizedBox(width: 15),
+                     IconButton(
+                      icon: Icon(
+                        Icons.person_add_alt_1,
+                        color: theme.colorScheme.primary,
+                      ),
+                      tooltip: "Inviter un membre",
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => InviteMemberPage(
+                                  chefEmail: email!,
+                                ),
+                          ),
+                        );
+                      },
                     ),
+                  //  const SizedBox(width: 15),
+                    ],
+                    )
                   ),
                 ],
               ),

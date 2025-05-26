@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:water_v0/screens/local_Info.dart';
 
-import 'package:water_v0/screens/neighborMap.dart';
+
 import 'package:water_v0/screens/recompense.dart';
 import 'package:water_v0/screens/user_map_page.dart';
 import 'package:water_v0/screens/video_list_item.dart';
@@ -14,6 +14,10 @@ import 'facture_page.dart';
 import 'Local.dart';
 import 'card.dart' as FeatureCard;
 import 'recup_id_famille.dart';
+import 'NotificationIcon.dart';
+import 'NotificationPage.dart'; // <-- Import your shared NotificationPage
+import 'login_screen.dart'; // <-- Import login screen for logout
+import 'TopNotificationBanner.dart';
 
 class EspaceMembre extends StatefulWidget {
   const EspaceMembre({super.key, required this.userId});
@@ -29,17 +33,97 @@ class _EspaceMembreState extends State<EspaceMembre> {
   String? errorMessage;
   bool hasFamily = false;
 
+  int unreadNotifications = 0; // Initial unread notifications count
+  int currentIndex = 0; // Index for managing the bottom navigation bar
+  String? email = '';
+
+/********************************************** */
+// Fetch unread notifications count from the backend
+  Future<void> fetchUnreadNotifications() async {
+    email = await getIdUSer();
+    print('*************Fetching unread notifications for user: $email'); // Debug log
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://10.0.2.2:5000/get_unread_notifications?userId=${email}',
+        ),
+      );
+      print('UnreadCount Response: ${response.body}'); // Debug log
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        int count = 0;
+        if (data["unreadCount"] is int) {
+          count = data["unreadCount"];
+        } else if (data["unreadCount"] is String) {
+          count = int.tryParse(data["unreadCount"]) ?? 0;
+        } else {
+          print(
+            'unreadCount is of unexpected type: ${data["unreadCount"].runtimeType}',
+          );
+        }
+
+        // If new unread notifications appear, show the banner
+        if (count > unreadNotifications) {
+          showTopNotification("Vous avez une nouvelle notification !", () {
+            Navigator.of(context).pop(); // dismiss banner
+            setState(() {
+              currentIndex = 3; // or navigate to notification page
+            });
+          });
+        }
+
+        setState(() {
+          unreadNotifications = count;
+        });
+      } else {
+        print(
+          'Failed to fetch unread notifications (status ${response.statusCode})',
+        );
+      }
+    } catch (e) {
+      print('Error fetching unread notifications: $e');
+    }
+  }
+  
+void showTopNotification(String message, VoidCallback onTap) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierLabel: '',
+      transitionDuration: Duration(milliseconds: 300),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return Align(
+          alignment: Alignment.topCenter,
+          child: TopNotificationBanner(message: message, onTap: onTap),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, -1),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        );
+      },
+    );
+  }
+
+
+/************************************************ */
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    fetchUnreadNotifications();
   }
 
   Future<void> _loadUserData() async {
     try {
-      final email = await getIdUSer();
+      email = await getIdUSer();
       
-      if (email == null || email.isEmpty) {
+      if (email == null || email== '') {
         setState(() {
           errorMessage = 'Veuillez vous connecter';
           isLoading = false;
@@ -138,7 +222,7 @@ class _EspaceMembreState extends State<EspaceMembre> {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      //color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -148,10 +232,21 @@ class _EspaceMembreState extends State<EspaceMembre> {
                         ),
                       ],
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      color: theme.colorScheme.primary,
-                      onPressed: () {},
+                    child:
+                     // Notification Icon
+                    NotificationIcon(
+                      unreadNotifications: unreadNotifications,
+                      onTap: () {                       
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NotificationPage(
+                              userEmail: email ?? '',
+                              isMember: true,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
