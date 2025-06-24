@@ -45,7 +45,7 @@ class _InviteMemberPageState extends State<InviteMemberPage> {
     try {
       print("****************Envoi de l'invitation à $memberEmail");
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:5000/send_invitation'),
+        Uri.parse('http://127.0.0.1:5000/send_invitation'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'senderId': widget.chefEmail,

@@ -143,7 +143,37 @@ def get_consumption_evolution(email):
             cur.close()
         if 'conn' in locals() and conn:
             conn.close()
-                        
+
+def get_user_badge_count(user_id):
+    """
+    Retourne le nombre de badges associés à un user_id donné.
+    """
+    try:
+        conn = get_connection()
+        if not conn:
+            return 0
+        print(f"Connexion réussie pour l'utilisateur {user_id}")
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT COUNT(*) 
+            FROM "UserBadge"  -- Remplace par le vrai nom de ta table si différent
+            WHERE user_id = %s
+        """, (user_id,))
+        
+        result = cur.fetchone()
+        return result[0] if result else 0
+
+    except Exception as e:
+        print(f"Erreur lors du comptage des badges pour l'utilisateur {user_id} : {str(e)}")
+        return 0
+
+    finally:
+        if 'cur' in locals():
+            cur.close()
+        if 'conn' in locals() and conn:
+            conn.close()
+                       
 def get_user_details(email):
     """Récupère toutes les informations utilisateur depuis la base de données"""
     try:
@@ -211,8 +241,9 @@ def get_user_details(email):
         user_dict = dict(zip(keys, user_data))
         user_dict['isChef'] = is_chef
         user_dict['waterSaved'] = evolution  # Ajout de l'évolution
-        user_dict['challenge']=calculate_challenge(email)  # Ajout du challenge
-        user_dict['id_famille']=id_famille
+        user_dict['challenge'] = calculate_challenge(email)  # Ajout du challenge
+        user_dict['id_famille'] = id_famille
+        user_dict['badgeCount'] = get_user_badge_count(email)  # Ajout du nombre de badges
         print(user_dict)
         return user_dict
     except Exception as e:

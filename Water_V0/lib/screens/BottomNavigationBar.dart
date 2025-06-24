@@ -15,7 +15,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.userId,
-     required this.isChef,
+    required this.isChef,
     required this.onTap,
   });
 
@@ -90,7 +90,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => HomeScreen(),
+                builder: (context) => HomeScreen(isChef: isChef), // Remplacez par HomeScreen(),
               ),
             );
             break;
@@ -99,7 +99,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => BadgesScreen(), // À remplacer par BadgesScreen()
+                builder: (context) => BadgesScreen(isChef: isChef), // À remplacer par BadgesScreen()
               ),
             );
             break;

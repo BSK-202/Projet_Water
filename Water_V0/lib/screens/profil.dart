@@ -37,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
       }
       
       final response = await http
-          .get(Uri.parse('http://10.0.2.2:5000/profile?email=$email'))
+          .get(Uri.parse('http://127.0.0.1:5000/profile?email=$email'))
           .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -277,12 +277,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   Icons.emoji_events,
                 ),
               ],
-               if (userData?['scoreFamille'] != null) ...[
+               if (userData?['badgeCount'] != null) ...[
                 const Divider(),
                 _buildInfoRow(
                   context,
                   'Badges',
-                  "12",
+                  userData!['badgeCount'].toString(),
                   Icons.military_tech,
                 ),
               ],
@@ -550,10 +550,11 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         onTap: () {
           if (isLogout) {
-           Navigator.push(
-              context,
+            // Déconnexion : on remplace toute la navigation par l'écran de login
+            Navigator.of(context).pushAndRemoveUntil(
               MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
+              (Route<dynamic> route) => false,
+            );
           } else {
             Navigator.push(
               context,

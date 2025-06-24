@@ -27,8 +27,8 @@ class ChallengeProvider extends ChangeNotifier {
 
   // Récupérer les défis depuis l'API
   Future<void> fetchChallengesFromAPI(BuildContext context, String userId) async {
-    final habitsUrl = Uri.parse('http://10.0.2.2:5000/get_completed_habits');
-    final socioUrl = Uri.parse('http://10.0.2.2:5000/get_socio');
+    final habitsUrl = Uri.parse('http://127.0.0.1:5000/get_completed_habits');
+    final socioUrl = Uri.parse('http://127.0.0.1:5000/get_socio');
 
     try {
       final responses = await Future.wait([
@@ -39,7 +39,7 @@ class ChallengeProvider extends ChangeNotifier {
       // Traitement des habitudes
       final habitsResponse = responses[0];
       if (habitsResponse.statusCode == 200) {
-        final List<dynamic> habitsData = jsonDecode(habitsResponse.body);
+        final List<dynamic> habitsData = jsonDecode(habitsResponse.body); // <-- OK, c'est une liste
         final List<Map<String, String>> completedHabits = [];
 
         for (final habit in habitsData) {
@@ -58,7 +58,7 @@ class ChallengeProvider extends ChangeNotifier {
       // Traitement des données socio
       final socioResponse = responses[1];
       if (socioResponse.statusCode == 200) {
-        final Map<String, dynamic> socioData = jsonDecode(socioResponse.body);
+        final Map<String, dynamic> socioData = jsonDecode(socioResponse.body); // <-- ici, c'est un map
         final List<dynamic> socioList = socioData['socio'];
         final List<Map<String, String>> completedSocio = [];
 

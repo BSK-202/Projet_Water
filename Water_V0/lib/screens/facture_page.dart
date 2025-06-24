@@ -19,8 +19,8 @@ class FacturePage extends StatefulWidget {
 
 class _FacturePageState extends State<FacturePage> {
   final List<PlatformFile> _uploadedFiles = []; // Changé pour PlatformFile
-  final String _serverUrl = "http://10.0.2.2:5000/extract_pdf";
-  final String _factureServerUrl = "http://10.0.2.2:5000/factures";
+  final String _serverUrl = "http://127.0.0.1:5000/extract_pdf";
+  final String _factureServerUrl = "http://127.0.0.1:5000/factures";
   Map<String, dynamic>? _jsonData;
   List<dynamic> _factures = [];
   bool _isLoading = true;

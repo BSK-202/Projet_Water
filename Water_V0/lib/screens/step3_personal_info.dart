@@ -101,7 +101,7 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
       isLoading = true;
     });
 
-    final url = Uri.parse("http://10.0.2.2:5000/register");
+    final url = Uri.parse("http://127.0.0.1:5000/register");
     final DateFormat serverFormat = DateFormat('yyyy-MM-dd');
     DateTime parsedDate = DateFormat('dd/MM/yyyy').parse(widget.birthDateController.text);
     String formattedDate = serverFormat.format(parsedDate);
@@ -128,8 +128,25 @@ class _Step3PersonalInfoState extends State<Step3PersonalInfo> {
         );
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       } else {
+        // Personnalisation des erreurs selon le backend
+        String errorMsg = "Erreur lors de l'inscription.";
+        try {
+          final data = jsonDecode(response.body);
+          final backendMsg = data['message'] ?? data['error'] ?? '';
+          if (backendMsg.contains('email')) {
+            errorMsg = "L'adresse e-mail est déjà utilisée ou invalide.";
+          } else if (backendMsg.contains('Champ manquant')) {
+            errorMsg = "Veuillez remplir tous les champs obligatoires.";
+          } else if (backendMsg.contains('Connexion à la base échouée')) {
+            errorMsg = "Erreur de connexion au serveur. Réessayez plus tard.";
+          } else if (backendMsg.isNotEmpty) {
+            errorMsg = backendMsg;
+          }
+        } catch (_) {
+          errorMsg = "Erreur inattendue lors de l'inscription.";
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erreur : ${response.body}")));
+          SnackBar(content: Text(errorMsg)));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

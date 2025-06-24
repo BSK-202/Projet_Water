@@ -21,6 +21,7 @@ from flask_cors import CORS
 from registration import selection, register
 from login import login
 from pdf_extraction import extract_data_from_pdf
+from edit_pass import request_password_change, verify_and_change_password
 import os
 from werkzeug.utils import secure_filename
 from pdf_extraction import get_pdf_path_from_uploads
@@ -40,7 +41,13 @@ app.secret_key = 'f095a328dd6798c545699eb4d5a79b05924717771b8558e1'
 Session(app)
 app.secret_key = 'f095a328dd6798c545699eb4d5a79b05924717771b8558e1'  # Clé secrète pour sécuriser les sessions
 
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 @app.before_request
 def make_session_permanent():
     session.permanent = True
@@ -777,6 +784,14 @@ def get_location(code_famille):
         print(f"Erreur dans get_location: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route('/request_password_change', methods=['POST'])
+def request_password_change_route():
+    return request_password_change()
+
+@app.route('/verify_and_change_password', methods=['POST'])
+def verify_and_change_password_route():
+    return verify_and_change_password()
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)

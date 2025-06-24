@@ -9,7 +9,8 @@ import '../widgets/category_card.dart';
 
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key, required this.isChef}) : super(key: key);
+  final bool isChef;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,8 +27,8 @@ String? userId;
   }
 
   Future<void> fetchChallengesFromAPI(BuildContext context, String userId) async {
-  final habitsUrl = Uri.parse('http://10.0.2.2:5000/get_completed_habits');
-  final socioUrl = Uri.parse('http://10.0.2.2:5000/get_socio');
+  final habitsUrl = Uri.parse('http://127.0.0.1:5000/get_completed_habits');
+  final socioUrl = Uri.parse('http://127.0.0.1:5000/get_socio');
 
   try {
     final responses = await Future.wait([
@@ -206,7 +207,7 @@ String? userId;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChallengesScreen(category: 'structural', userId: '',),
+                            builder: (context) => ChallengesScreen(category: 'structural', userId: '', isChef: widget.isChef),
                           ),
                         );
                       },
@@ -224,7 +225,7 @@ String? userId;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChallengesScreen(category: 'habits', userId: '',),
+                            builder: (context) => ChallengesScreen(category: 'habits', userId: '', isChef: widget.isChef),
                           ),
                         );
                       },
@@ -242,7 +243,7 @@ String? userId;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChallengesScreen(category: 'sociodemographic', userId: '',),
+                            builder: (context) => ChallengesScreen(category: 'sociodemographic', userId: '', isChef: widget.isChef),
                           ),
                         );
                       },
@@ -260,7 +261,7 @@ String? userId;
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ChallengesScreen(category: 'consumption', userId: '',),
+                            builder: (context) => ChallengesScreen(category: 'consumption', userId: '', isChef: widget.isChef),
                           ),
                         );
                       },

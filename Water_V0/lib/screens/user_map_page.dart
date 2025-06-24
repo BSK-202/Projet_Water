@@ -134,7 +134,7 @@ class _UserMapPageState extends State<UserMapPage> with TickerProviderStateMixin
     if (CurrentFamilyID == null || CurrentFamilyID!.isEmpty) return;
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/get_location/$CurrentFamilyID'),
+        Uri.parse('http://127.0.0.1:5000/get_location/$CurrentFamilyID'),
       );
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

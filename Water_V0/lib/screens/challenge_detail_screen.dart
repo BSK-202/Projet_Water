@@ -1,8 +1,8 @@
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:water_v0/screens/BottomNavigationBar.dart';
 import '../models/challenge.dart';
 import '../models/challenge_provider.dart';
 import '../widgets/input_widgets.dart';
@@ -10,11 +10,10 @@ import 'package:water_v0/screens/recup_id_famille.dart';
 
 class ChallengeDetailScreen extends StatefulWidget {
   final Challenge challenge;
+  final bool isChef;
 
-  const ChallengeDetailScreen({
-    Key? key,
-    required this.challenge,
-  }) : super(key: key);
+  const ChallengeDetailScreen({Key? key, required this.challenge, required this.isChef})
+    : super(key: key);
 
   @override
   State<ChallengeDetailScreen> createState() => _ChallengeDetailScreenState();
@@ -42,40 +41,9 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
   }
 
   Future<void> fetchCompletedHabits() async {
-  if (userId == null) return;
-  setState(() => _isLoading = true);
-  final url = Uri.parse('http://10.0.2.2:5000/get_completed_habits');
-  try {
-    final res = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_id': userId}),
-    );
-    if (res.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(res.body);
-      setState(() {
-        completedHabits = {
-          for (var item in data)
-            item['id'].toString(): item['valeur'].toString()
-        };
-        // **nouveau** : on recharge _userInput si on a déjà une réponse stockée
-        final lastValue = completedHabits[widget.challenge.id];
-        if (lastValue != null) {
-          _userInput = lastValue;
-        }
-      });
-    }
-  } catch (e) {
-    print('Error fetching habits: $e');
-  } finally {
-    setState(() => _isLoading = false);
-  }
-}
-
-  Future<void> fetchSocioData() async {
     if (userId == null) return;
     setState(() => _isLoading = true);
-    final url = Uri.parse('http://10.0.2.2:5000/get_socio');
+    final url = Uri.parse('http://127.0.0.1:5000/get_completed_habits');
     try {
       final res = await http.post(
         url,
@@ -84,17 +52,47 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       );
       if (res.statusCode == 200) {
         final List<dynamic> data = jsonDecode(res.body);
-      setState(() {
-  completedSocio = {
-    for (var item in data)
-      item['id'].toString(): item['valeur'].toString()
-  };
-  final lastValue = completedSocio[widget.challenge.id];
-  if (lastValue != null) {
-    _userInput = lastValue;
+        setState(() {
+          completedHabits = {
+            for (var item in data)
+              item['id'].toString(): item['valeur'].toString(),
+          };
+          // **nouveau** : on recharge _userInput si on a déjà une réponse stockée
+          final lastValue = completedHabits[widget.challenge.id];
+          if (lastValue != null) {
+            _userInput = lastValue;
+          }
+        });
+      }
+    } catch (e) {
+      print('Error fetching habits: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
-});
 
+  Future<void> fetchSocioData() async {
+    if (userId == null) return;
+    setState(() => _isLoading = true);
+    final url = Uri.parse('http://127.0.0.1:5000/get_socio');
+    try {
+      final res = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'user_id': userId}),
+      );
+      if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body);
+        setState(() {
+          completedSocio = {
+            for (var item in data)
+              item['id'].toString(): item['valeur'].toString(),
+          };
+          final lastValue = completedSocio[widget.challenge.id];
+          if (lastValue != null) {
+            _userInput = lastValue;
+          }
+        });
       }
     } catch (e) {
       print('Error fetching socio: $e');
@@ -112,11 +110,11 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
     setState(() => _isSubmitting = true);
 
     final provider = Provider.of<ChallengeProvider>(context, listen: false);
-    provider.updateChallenge(widget.challenge.id, _userInput!);
 
-    final path = widget.challenge.category == 'sociodemographic'
-      ? 'http://10.0.2.2:5000/socio'
-      : 'http://10.0.2.2:5000/habits';
+    final path =
+        widget.challenge.category == 'sociodemographic'
+            ? 'http://127.0.0.1:5000/socio'
+            : 'http://127.0.0.1:5000/habits';
     final payload = {
       'id': widget.challenge.id,
       'category': widget.challenge.category,
@@ -132,17 +130,28 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
         body: jsonEncode(payload),
       );
       if (response.statusCode == 200) {
-        // Après soumission réussie, rafraîchir les dernières données
-        await fetchCompletedHabits();
-        await fetchSocioData();
+        final Map<String, dynamic> resp = jsonDecode(response.body);
+        final bool isNormal = resp['is_normal'] ?? true;
+        final String message = resp['message'] ?? 'Challenge réussi !';
+        final int points = resp['points_added'] ?? widget.challenge.points;
+
+        if (isNormal) {
+          provider.updateChallenge(widget.challenge.id, _userInput!);
+          await fetchCompletedHabits();
+          await fetchSocioData();
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Challenge réussi ! +${widget.challenge.points} points'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            content: Text('$message +$points points'),
+            backgroundColor: isNormal ? Colors.green : Colors.red,
+            duration: const Duration(seconds: 30), // Affichage long (1 min)
           ),
         );
-        Navigator.pop(context, true);
+        if (isNormal) {
+          Navigator.pop(context, true);
+        }
+        // Si isNormal == false, ne pas pop, ne pas update l'UI
       } else {
         print('Erreur POST: ${response.statusCode}');
       }
@@ -160,71 +169,145 @@ class _ChallengeDetailScreenState extends State<ChallengeDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(widget.challenge.title, style: Theme.of(context).textTheme.headlineMedium),
+        title: Text(
+          widget.challenge.title,
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           color: Theme.of(context).colorScheme.primary,
           onPressed: () => Navigator.pop(context, false),
         ),
       ),
-      body: _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Info Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.tertiary,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Info Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(widget.challenge.icon, color: Theme.of(context).colorScheme.primary, size: 32),
-                          const SizedBox(width: 12),
-                          Expanded(child: Text(widget.challenge.title, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(12)),
-                            child: Row(children: [const Icon(Icons.star, color: Colors.white, size: 16), const SizedBox(width: 4), Text('${widget.challenge.points}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
+                          Row(
+                            children: [
+                              Icon(
+                                widget.challenge.icon,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 32,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  widget.challenge.title,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${widget.challenge.points}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            widget.challenge.description,
+                            style: const TextStyle(fontSize: 16),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(widget.challenge.description, style: const TextStyle(fontSize: 16)),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Your Response',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 16),
+                    InputWidget(
+                      challenge: widget.challenge,
+                      value: _userInput,
+                      onChanged: _updateInput,
+                      enabled: !_isSubmitting,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            (_userInput == null ||
+                                    _userInput!.isEmpty ||
+                                    _isSubmitting)
+                                ? null
+                                : _submitChallenge,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child:
+                            _isSubmitting
+                                ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : widget.challenge.isCompleted
+                                ? const Text('Challenge Completed')
+                                : const Text('Submit Challenge'),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                Text('Your Response', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 16),
-                InputWidget(
-                  challenge: widget.                                  challenge,
-                  value: _userInput,
-                  onChanged: _updateInput,
-                  enabled: !_isSubmitting,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: (_userInput == null || _userInput!.isEmpty || _isSubmitting) ? null : _submitChallenge,
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    child: _isSubmitting
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : widget.challenge.isCompleted ? const Text('Challenge Completed') : const Text('Submit Challenge'),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+      bottomNavigationBar: CustomBottomNavigationBar(
+        currentIndex: 1,
+        userId: '',
+        isChef: widget.isChef,
+        onTap: (i) {/* à gérer si besoin */},
+      ),
     );
   }
 }

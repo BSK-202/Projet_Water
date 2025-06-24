@@ -26,7 +26,7 @@ class _NotificationPageState extends State<NotificationPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://10.0.2.2:5000/get_notifications?userId=${widget.userEmail}',
+          'http://127.0.0.1:5000/get_notifications?userId=${widget.userEmail}',
         ),
       );
       if (response.statusCode == 200) {
@@ -106,7 +106,7 @@ class _NotificationPageState extends State<NotificationPage> {
                       if (notif['status'] == 'pending') {
                         await http.post(
                           Uri.parse(
-                            'http://10.0.2.2:5000/mark_notification_vued',
+                            'http://127.0.0.1:5000/mark_notification_vued',
                           ),
                           headers: {"Content-Type": "application/json"},
                           body: json.encode({"notificationId": notif['id']}),
@@ -154,7 +154,7 @@ class NotificationDetailPage extends StatelessWidget {
     final chefEmail = notification["senderId"];
     final notifId = notification["id"];
     final response = await http.post(
-      Uri.parse("http://10.0.2.2:5000/invitation_action"),
+      Uri.parse("http://127.0.0.1:5000/invitation_action"),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "memberEmail": userEmail,

@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
           create: (context) => UserProvider(
             // Choisir le service de base de données
             ApiDatabaseService(
-              baseUrl: 'http://10.0.2.2:5000', // Remplacez par votre URL
+              baseUrl: 'http://127.0.0.1:5000', // Remplacez par votre URL
               headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',

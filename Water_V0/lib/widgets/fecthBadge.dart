@@ -7,7 +7,7 @@ Future<List<customBadge.Badge>> fetchUserBadges() async {
   var userId = await getIdUSer();
   print("*******************************************féhéhéhéhéhéhéhéhéh******************************************");
   print(userId);
-  final response = await http.get(Uri.parse('http://10.0.2.2:5000/badges/${userId!=null?userId:""}'));
+  final response = await http.get(Uri.parse('http://127.0.0.1:5000/badges/${userId!=null?userId:""}'));
 
   if (response.statusCode == 200) {
     List<dynamic> data = json.decode(response.body);

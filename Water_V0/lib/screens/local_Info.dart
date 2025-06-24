@@ -116,7 +116,7 @@ class _LocalFamilleScreenState extends State<LocalFamilleScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://10.0.2.2:5000/check-local?code_famille=$codeFamille',
+          'http://127.0.0.1:5000/check-local?code_famille=$codeFamille',
         ),
       );
 
@@ -197,7 +197,7 @@ class _LocalFamilleScreenState extends State<LocalFamilleScreen> {
 
     try {
       final response = await http.put(
-        Uri.parse('http://10.0.2.2:5000/update-local'),
+        Uri.parse('http://127.0.0.1:5000/update-local'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'local_id': _localData!['IDlocal'],

@@ -11,7 +11,7 @@ def ischef(email):
             return None
         
         cur = conn.cursor()
-
+        print(f"Vérification de l'utilisateur : {email}")
         # Chercher d'abord dans la table 'chef'
         cur.execute("""SELECT email FROM "chef" WHERE email = %s""", (email,))
         chef = cur.fetchone()

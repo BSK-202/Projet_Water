@@ -29,7 +29,8 @@ def get_consumption_last_3_months(family_code):
     last_facture_date = cursor.fetchone()
 
     if not last_facture_date:
-        return [0, 0, 0]  # Aucun historique de consommation trouvé
+        # Toujours retourner un tuple (liste, None)
+        return [0, 0, 0], None
 
     last_date = last_facture_date[0]
 
@@ -57,7 +58,7 @@ def get_consumption_last_3_months(family_code):
         consommation_list.append(res[0] if res else 0)
 
     print(f"Consommation des 3 derniers mois pour la famille {family_code}: {consommation_list}")
-    return consommation_list,last_date
+    return consommation_list, last_date
 
 
 # Fonction pour récupérer les informations de la famille
@@ -102,6 +103,7 @@ def calculer_seuil(local_info):
         (COEFF_JARDIN if local_info["jardin"] else 1.0) +
         local_info["nb_personne"] * 0.05  # Coefficient supplémentaire en fonction du nombre de personnes
     )
+    print(f"Seuil calculé: {seuil:.2f} pour les infos du local: {local_info}")
     return seuil
 
 # Fonction principale pour calculer et retourner les récompenses
@@ -136,10 +138,10 @@ def calculate_rewards(family_code):
         ORDER BY "dateFacture" DESC LIMIT 1
     """, (family_code, mois_courant, annee_courante))
     facture_current = cursor.fetchone()
-
+    
     if not facture_current:
        reasons.append("Aucun")
-
+       print(f"Facture actuelle pour {mois_courant}/{annee_courante}: {facture_current}")
        return  {
         "scoreFamille":  famille_data[1],
         "nomFamille": famille_data[0],

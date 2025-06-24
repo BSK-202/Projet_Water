@@ -2,9 +2,9 @@
 import psycopg2
 
 DB_CONFIG = {
-    "dbname": "watercontrol_bdd_recent",
+    "dbname": "last_bdd",
     "user": "postgres",
-    "password": "Tb20041211",
+    "password": "1234",
     "host": "localhost",
     "port": "5432"
 }

@@ -9,20 +9,21 @@ import '../screens/challenge_detail_screen.dart';
 
 class ChallengesScreen extends StatelessWidget {
   final String category;
-
+  final bool isChef;
   const ChallengesScreen({
     Key? key,
-    required this.category, required String userId,
+    required this.category,
+    required String userId,
+    required this.isChef
   }) : super(key: key);
 
   String getCategoryTitle(String category) {
     switch (category) {
-    
       case 'habits':
         return 'Consumption Habits Challenges';
       case 'sociodemographic':
         return 'Sociodemographic Challenges';
-      
+
       default:
         return 'Challenges';
     }
@@ -30,74 +31,82 @@ class ChallengesScreen extends StatelessWidget {
 
   IconData getCategoryIcon(String category) {
     switch (category) {
-    
       case 'habits':
         return Icons.opacity;
       case 'sociodemographic':
         return Icons.people;
-    
+
       default:
         return Icons.emoji_events;
     }
   }
 
   Future<void> _fetchAndUpdateChallenges(BuildContext context) {
-  final provider = Provider.of<ChallengeProvider>(context, listen: false);
-  
-  // Configuration des deux requêtes en parallèle
-  final habitsFuture = http.get(Uri.parse('http://10.0.2.2:5000/get_completed_habits'))
-    .then((response) => _handleHabitsResponse(response, provider))
-    .catchError((e) => _handleHabitsError(e));
+    final provider = Provider.of<ChallengeProvider>(context, listen: false);
 
-  final socioFuture = http.get(Uri.parse('http://10.0.2.2:5000/get_socio'))
-    .then((response) => _handleSocioResponse(response, provider))
-    .catchError((e) => _handleSocioError(e));
+    // Configuration des deux requêtes en parallèle
+    final habitsFuture = http
+        .get(Uri.parse('http://127.0.0.1:5000/get_completed_habits'))
+        .then((response) => _handleHabitsResponse(response, provider))
+        .catchError((e) => _handleHabitsError(e));
 
-  // Exécution parallèle avec gestion du résultat global
-  return Future.wait([habitsFuture, socioFuture])
-    .then((_) => _handleFinalUpdate(provider))
-    .catchError((e) => _handleGlobalError(e));
-}
+    final socioFuture = http
+        .get(Uri.parse('http://127.0.0.1:5000/get_socio'))
+        .then((response) => _handleSocioResponse(response, provider))
+        .catchError((e) => _handleSocioError(e));
 
-// Gestion des réponses
-void _handleHabitsResponse(http.Response response, ChallengeProvider provider) {
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    provider.updateChallengesFromAPI(data['habits'],'habits');
-    print('Habitudes mises à jour avec succès');
-  } else {
-    print('Statut HTTP habitudes: ${response.statusCode}');
+    // Exécution parallèle avec gestion du résultat global
+    return Future.wait([habitsFuture, socioFuture])
+        .then((_) => _handleFinalUpdate(provider))
+        .catchError((e) => _handleGlobalError(e));
   }
-}
 
-void _handleSocioResponse(http.Response response, ChallengeProvider provider) {
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    provider.updateChallengesFromAPI(data['socio'], 'sociodemographic');
-    print('Données socio mises à jour avec succès');
-  } else {
-    print('Statut HTTP socio: ${response.statusCode}');
+  // Gestion des réponses
+  void _handleHabitsResponse(
+    http.Response response,
+    ChallengeProvider provider,
+  ) {
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      provider.updateChallengesFromAPI(data['habits'], 'habits');
+      print('Habitudes mises à jour avec succès');
+    } else {
+      print('Statut HTTP habitudes: ${response.statusCode}');
+    }
   }
-}
 
-// Gestion des erreurs
-void _handleHabitsError(dynamic error) {
-  print('Erreur réseau habitudes: $error');
-}
+  void _handleSocioResponse(
+    http.Response response,
+    ChallengeProvider provider,
+  ) {
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      provider.updateChallengesFromAPI(data['socio'], 'sociodemographic');
+      print('Données socio mises à jour avec succès');
+    } else {
+      print('Statut HTTP socio: ${response.statusCode}');
+    }
+  }
 
-void _handleSocioError(dynamic error) {
-  print('Erreur réseau socio: $error');
-}
+  // Gestion des erreurs
+  void _handleHabitsError(dynamic error) {
+    print('Erreur réseau habitudes: $error');
+  }
 
-// Finalisation
-void _handleFinalUpdate(ChallengeProvider provider) {
-  provider.notifyListeners();
-  print('Toutes les mises à jour terminées');
-}
+  void _handleSocioError(dynamic error) {
+    print('Erreur réseau socio: $error');
+  }
 
-void _handleGlobalError(dynamic error) {
-  print('Erreur globale dans le processus: $error');
-}
+  // Finalisation
+  void _handleFinalUpdate(ChallengeProvider provider) {
+    provider.notifyListeners();
+    print('Toutes les mises à jour terminées');
+  }
+
+  void _handleGlobalError(dynamic error) {
+    print('Erreur globale dans le processus: $error');
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ChallengeProvider>(context);
@@ -121,7 +130,10 @@ void _handleGlobalError(dynamic error) {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => _fetchAndUpdateChallenges(context), // Récupérer et mettre à jour les défis
+            onPressed:
+                () => _fetchAndUpdateChallenges(
+                  context,
+                ), // Récupérer et mettre à jour les défis
           ),
         ],
       ),
@@ -145,9 +157,7 @@ void _handleGlobalError(dynamic error) {
                     children: [
                       Text(
                         'Progress: $completedChallenges/${challenges.length} challenges',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       LinearProgressIndicator(
@@ -178,7 +188,9 @@ void _handleGlobalError(dynamic error) {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ChallengeDetailScreen(challenge: challenge),
+                        builder:
+                            (context) =>
+                                ChallengeDetailScreen(challenge: challenge,isChef: isChef,),
                       ),
                     );
                   },
@@ -188,27 +200,11 @@ void _handleGlobalError(dynamic error) {
           ),
         ],
       ),
-      bottomNavigationBar: CustomBottomNavigationBar(
-        currentIndex: 1, // Index correspondant à la page "Challenges"
-        userId: 'userId', // Remplacez par l'ID utilisateur approprié
-        isChef: false, // Remplacez par la valeur appropriée
-        onTap: (index) {
-          // Gérer la navigation en fonction de l'index
-          switch (index) {
-            case 0:
-              Navigator.pushNamed(context, '/home'); // Exemple de route
-              break;
-            case 1:
-              // Rester sur la page actuelle
-              break;
-            case 2:
-              Navigator.pushNamed(context, '/badges');
-              break;
-            case 3:
-              Navigator.pushNamed(context, '/profile');
-              break;
-          }
-        },
+         bottomNavigationBar: CustomBottomNavigationBar(
+        currentIndex: 1,
+        userId: '',
+        isChef: isChef,
+        onTap: (i) {/* à gérer si besoin */},
       ),
     );
   }

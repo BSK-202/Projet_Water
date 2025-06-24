@@ -9,14 +9,15 @@ import '../widgets/category_card.dart';
 import 'package:water_v0/screens/BottomNavigationBar.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({Key? key, required this.isChef}) : super(key: key);
+  final bool isChef;
+
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _isLoading = true;
-  String? userId; // Correction ici
+  String? userId;
 
   @override
   void initState() {
@@ -37,15 +38,12 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Colors.red,
         ),
       );
-      setState(() {
-        _isLoading = false; // Arrêter le chargement en cas d'erreur
-      });
       return;
     }
 
     // URLs des API
-    final habitsUrl = Uri.parse('http://10.0.2.2:5000/get_completed_habits');
-    final socioUrl = Uri.parse('http://10.0.2.2:5000/get_socio');
+    final habitsUrl = Uri.parse('http://127.0.0.1:5000/get_completed_habits');
+    final socioUrl = Uri.parse('http://127.0.0.1:5000/get_socio');
 
     try {
       // Exécuter les deux requêtes en parallèle
@@ -68,71 +66,48 @@ class _HomeScreenState extends State<HomeScreen> {
       // Traiter la réponse pour les habitudes
       final habitsResponse = responses[0];
       if (habitsResponse.statusCode == 200) {
-        print('🔹 Réponse des habitudes **************Screen: ${habitsResponse.body}')  ;
         final habitsData = jsonDecode(habitsResponse.body);
         if (habitsData is List) {
-          final completedHabits = habitsData.map((habit) {
-            return {
-              "id": habit["id"].toString(),
-              "attribut": habit["attribut"].toString(),
-              "valeur": habit["valeur"].toString(),
-            };
-          }).toList().cast<Map<String, String>>();
-          provider.updateChallengesFromAPI(completedHabits , 'habits'); // Mise à jour via le Provider
-          print('🔹 Habitudes complétées récupérées et mises à jour : $completedHabits');
-        } else {
-          print('❌ Format inattendu pour les données habits : $habitsData');
+          final completedHabits =
+              habitsData
+                  .map((habit) {
+                    return {
+                      "id": habit["id"].toString(),
+                      "attribut": habit["attribut"].toString(),
+                      "valeur": habit["valeur"].toString(),
+                    };
+                  })
+                  .toList()
+                  .cast<Map<String, String>>();
+          provider.updateChallengesFromAPI(completedHabits, 'habits');
         }
-      } else {
-        print('❌ Erreur lors de la récupération des habitudes : ${habitsResponse.statusCode}');
       }
-      final socioResponse = responses[1];
+
       // Traiter la réponse pour les socio-démographiques
-      try {
-        print('🔹 Début traitement socio ----------------');
-        final socioData = jsonDecode(socioResponse.body);
-        print('🔹 Structure complète socioData: $socioData');
-
-        // Vérifiez si "socio" est une liste
-        if (socioData is List) {
-          final List<dynamic> socioList = socioData;
-          print('🔹 Nombre d\'entrées socio: ${socioList.length}');
-
-          final List<Map<String, String>> completedSocio = [];
-
-          for (var i = 0; i < socioList.length; i++) {
-            try {
-              final socio = socioList[i] as Map<String, dynamic>;
-              print('🔹 Entrée socio $i: $socio');
-
-              final entry = {
-                "id": socio["id"].toString(),
-                "attribut": socio["attribut"].toString(),
-                "valeur": socio["valeur"].toString(),
-              };
-              completedSocio.add(entry);
-              print('🔹 Entrée convertie $i: $entry');
-            } catch (e) {
-              print('❌ Erreur sur l\'entrée socio $i: $e');
-            }
+      final socioResponse = responses[1];
+      final socioData = jsonDecode(socioResponse.body);
+      if (socioData is List) {
+        final List<Map<String, String>> completedSocio = [];
+        for (var socio in socioData) {
+          try {
+            completedSocio.add({
+              "id": socio["id"].toString(),
+              "attribut": socio["attribut"].toString(),
+              "valeur": socio["valeur"].toString(),
+            });
+          } catch (e) {
+            print('Erreur sur une entrée socio: $e');
           }
-
-          print('🔹 Données socio finales: $completedSocio');
-          provider.updateChallengesFromAPI(completedSocio, 'sociodemographic');
-          print('🔹 Mise à jour socio réussie');
-        } else {
-          print('❌ Format inattendu pour socioData : ${socioData.runtimeType}');
-          print('❌ Contenu socioData : $socioData');
         }
-      } catch (e) {
-        print('❌ Erreur lors du traitement socio: $e');
+        provider.updateChallengesFromAPI(completedSocio, 'sociodemographic');
       }
     } catch (e) {
-      print('❌ Erreur lors de la récupération des données hhhh actch : $e');
-    } finally {
-      setState(() {
-        _isLoading = false; // Fin du chargement
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -153,15 +128,11 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             color: Theme.of(context).colorScheme.primary,
-            onPressed: _fetchAndUpdateChallenges, // Récupérer et mettre à jour les défis
+            onPressed: _fetchAndUpdateChallenges,
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(
-        child: CircularProgressIndicator(), // Indicateur de chargement
-      )
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -181,15 +152,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           'Your Progress',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                          ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(color: Colors.white),
                         ),
                         Text(
                           '${provider.completedChallenges}/${provider.challenges.length > 16 ? 16 : provider.challenges.length}',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                          ),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(color: Colors.white),
                         ),
                       ],
                     ),
@@ -197,7 +168,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     LinearProgressIndicator(
                       value: provider.overallProgress,
                       backgroundColor: Colors.white.withOpacity(0.3),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
                       minHeight: 10,
                     ),
                     const SizedBox(height: 12),
@@ -206,10 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Row(
                           children: [
-                            const Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                            ),
+                            const Icon(Icons.star, color: Colors.amber),
                             const SizedBox(width: 4),
                             Text(
                               '${provider.totalPoints} points',
@@ -240,8 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
 
-
-
               const SizedBox(height: 50),
 
               CategoryCard(
@@ -254,7 +222,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ChallengesScreen(category: 'habits', userId: '',),
+                      builder:
+                          (context) => ChallengesScreen(
+                            category: 'habits',
+                            userId: userId ?? '',
+                            isChef: widget.isChef,
+                          ),
                     ),
                   );
                 },
@@ -267,32 +240,33 @@ class _HomeScreenState extends State<HomeScreen> {
                 description: 'Information about your household',
                 icon: Icons.people,
                 progress: provider.getCategoryProgress('sociodemographic'),
-                count: provider.getChallengesByCategory('sociodemographic').length,
+                count:
+                    provider.getChallengesByCategory('sociodemographic').length,
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const ChallengesScreen(category: 'sociodemographic', userId: '',),
+                      builder:
+                          (context) => ChallengesScreen(
+                            category: 'sociodemographic',
+                            userId: userId ?? '',
+                            isChef: widget.isChef,
+                          ),
                     ),
                   );
                 },
               ),
 
               const SizedBox(height: 12),
-
-
             ],
           ),
         ),
       ),
-
       bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: 1,
         userId: userId ?? '',
-        isChef: false, // Remplacez par la logique appropriée pour déterminer si l'utilisateur est un chef
-        onTap: (index) {
-          // Optionnel : logique supplémentaire
-        },
+        isChef: widget.isChef,
+        onTap: (index) {},
       ),
     );
   }

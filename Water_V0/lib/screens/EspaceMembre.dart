@@ -45,7 +45,7 @@ class _EspaceMembreState extends State<EspaceMembre> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://10.0.2.2:5000/get_unread_notifications?userId=${email}',
+          'http://127.0.0.1:5000/get_unread_notifications?userId=${email}',
         ),
       );
       print('UnreadCount Response: ${response.body}'); // Debug log
@@ -131,7 +131,7 @@ void showTopNotification(String message, VoidCallback onTap) {
         return;
       }
 
-      final uri = Uri.parse('http://10.0.2.2:5000/profile?email=$email');
+      final uri = Uri.parse('http://127.0.0.1:5000/profile?email=$email');
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -405,7 +405,7 @@ void showTopNotification(String message, VoidCallback onTap) {
                       
                       // Appel à l'API pour vérifier le local
                 final response = await http.get(
-                  Uri.parse('http://10.0.2.2:5000/check-local?code_famille=${userData!['id_famille']}'),
+                  Uri.parse('http://127.0.0.1:5000/check-local?code_famille=${userData!['id_famille']}'),
                 );
 
                 if (response.statusCode == 200) {

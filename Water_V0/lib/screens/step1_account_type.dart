@@ -22,7 +22,7 @@ class Step1AccountType extends StatelessWidget {
   });
 
   Future<void> _sendSelection(bool isChef) async {
-    final url = Uri.parse("http://10.0.2.2:5000/selection"); // URL du serveur Flask
+    final url = Uri.parse("http://127.0.0.1:5000/selection"); // URL du serveur Flask
 
     final Map<String, dynamic> selectionData = {
       "isChef": isChef,

@@ -56,6 +56,53 @@ def get_habitude_column(id_habitude):
     }
     return columns.get(id_habitude)
 
+def get_normal_value_for_habit(habit_id):
+    # Valeurs normales pour chaque habitude (id 1 à 12)
+    normal_values = {
+        '1': 2,    # nbr_litre_boire: 2L/jour recommandé
+        '2': 10,   # durée moyenne douche (en minutes)
+        '3': 8,    # bains par mois
+        '4': 1,    # prière: 1 (Oui/Non, donc pas de normalité stricte)
+        '5': 7,    # douches par semaine
+        '6': 20,   # durée moyenne bains (en minutes)
+        '7': 10,   # consommation cuisine (litres/jour)
+        '8': 5,    # chasse d'eau par jour
+        '9': 5,    # cycles machine à laver par semaine
+        '10': 3,   # cycles lave-vaisselle par semaine
+        '11': 2,   # lavage voiture par mois
+        '12': 2,   # nombre de véhicules
+    }
+    return normal_values.get(habit_id)
+
+def get_habit_congrats_message(habit_id):
+    messages = {
+        '2': "Bravo ! Votre durée de douche est dans la norme.",
+        '3': "Bravo ! Votre nombre de bains est raisonnable.",
+        '5': "Bravo ! Votre fréquence de douche est correcte.",
+        '6': "Bravo ! La durée de vos bains est dans la norme.",
+        '8': "Bravo ! Votre utilisation des toilettes est raisonnable.",
+        '9': "Bravo ! Votre utilisation de la machine à laver est dans la norme.",
+        '10': "Bravo ! Votre utilisation du lave-vaisselle est correcte.",
+        '11': "Bravo ! Vous lavez votre voiture de façon raisonnable.",
+        '12': "Bravo ! Nombre de véhicules dans la norme.",
+        # ...autres messages...
+    }
+    return messages.get(habit_id, "Félicitations pour votre engagement !")
+
+def get_habit_alert_message(habit_id):
+    messages = {
+        '2': "Attention : Votre durée de douche dépasse la norme. Essayez de la réduire pour économiser l'eau.",
+        '3': "Attention : Vous prenez beaucoup de bains. Réduisez pour préserver l'eau.",
+        '5': "Attention : Fréquence de douche élevée. Pensez à économiser l'eau.",
+        '6': "Attention : Vos bains sont longs. Essayez de réduire la durée.",
+        '8': "Attention : Vous tirez souvent la chasse d'eau. Soyez vigilant.",
+        '9': "Attention : Beaucoup de cycles de machine à laver. Essayez de regrouper les lessives.",
+        '10': "Attention : Utilisation fréquente du lave-vaisselle.",
+        '11': "Attention : Lavage de voiture fréquent.",
+        '12': "Attention : Beaucoup de véhicules, pensez à l'impact environnemental.",
+        # ...autres messages...
+    }
+    return messages.get(habit_id, "Pensez à adopter de meilleures habitudes pour économiser l'eau.")
 
 def receive_habits(data):
     conn = None
@@ -76,13 +123,13 @@ def receive_habits(data):
         user_email = data.get('user_id')
         value = data.get('value')
         points = data.get('points')
-        print(habit_id,user_email,value,points)
-         # Conversion de la valeur
+        print(habit_id, user_email, value, points)
+        # Conversion de la valeur
         if value == 'Oui':
-            value=True
+            value = True
         else:
-            if value == 'Non': 
-                value=False
+            if value == 'Non':
+                value = False
         # Vérifier si l'utilisateur existe et est chef ou membre
         user_type = ischef(user_email)
         if user_type is None:
@@ -112,8 +159,6 @@ def receive_habits(data):
         
         id_habitude = result[0]
 
-
-      
         print("VALUES:", value, id_habitude)
 
         # 2. Mettre à jour l'habitude
@@ -127,26 +172,49 @@ def receive_habits(data):
                               WHERE id_habitude = %s"""
             cur.execute(update_query, (value, id_habitude))
 
-        conn.commit()    
-
-        # 3. Mettre à jour le score de l'utilisateur
-        if user_type:  # Chef
-            update_score_query = """UPDATE "chef" SET score = score + %s 
-                                   WHERE email = %s"""
-        else:  # Membre
-            update_score_query = """UPDATE "Membre" SET score = score + %s 
-                                   WHERE email = %s"""
-        
-        cur.execute(update_score_query, (points, user_email))
-
         conn.commit()
 
+        # Vérification de la normalité de la valeur AVANT attribution des points
+        is_normal = True
+        message = ""
+        points_added = points
+        try:
+            normal_value = get_normal_value_for_habit(habit_id)
+            if normal_value is not None and value is not None:
+                try:
+                    float_value = float(value)
+                    if float_value > normal_value:
+                        is_normal = False
+                        message = get_habit_alert_message(habit_id)
+                        points_added = 0
+                    else:
+                        message = get_habit_congrats_message(habit_id)
+                except Exception:
+                    message = get_habit_congrats_message(habit_id)
+            else:
+                message = get_habit_congrats_message(habit_id)
+        except Exception:
+            message = "Merci pour votre réponse."
+
+        # 3. Mettre à jour le score de l'utilisateur SEULEMENT si normal
+        if is_normal:
+            if user_type:  # Chef
+                update_score_query = """UPDATE "chef" SET score = score + %s 
+                                       WHERE email = %s"""
+            else:  # Membre
+                update_score_query = """UPDATE "Membre" SET score = score + %s 
+                                       WHERE email = %s"""
+            cur.execute(update_score_query, (points, user_email))
+            conn.commit()
+        # Si hors norme, pas de points, donc pas de mise à jour du score
+
         return jsonify({
-            "message": "Habitude et score mis à jour avec succès",
+            "message": message,
+            "is_normal": is_normal,
             "user_type": "chef" if user_type else "membre",
             "updated_column": column_name,
             "new_value": value,
-            "points_added": points
+            "points_added": points_added
         }), 200
 
     except Exception as e:
@@ -161,4 +229,4 @@ def receive_habits(data):
         if conn:
             conn.close()
 
-            
+

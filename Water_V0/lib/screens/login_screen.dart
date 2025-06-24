@@ -7,6 +7,8 @@ import 'dart:convert';
 import 'EspaceChef.dart';
 import 'EspaceMembre.dart';
 import 'registration_screen.dart';
+import 'edit_password.dart'; // Import de la nouvelle page de réinitialisation de mot de passe
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -20,11 +22,11 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   // 🛠️ Assurez-vous que l'URL est correcte pour votre environnement
-   final String _apiUrl = "http://10.0.2.2:5000/login"; // Pour l'émulateur Android
-  //final String _apiUrl = "http://127.0.0.1:5000/login";
-  
+  final String _apiUrl =
+      "http://127.0.0.1:5000/login"; // Pour l'émulateur Android
+
   get userId => null;
-  
+
   get idUser => null; // Pour Chrome
   // final String _apiUrl = "http://192.168.x.x:5000/login"; // Pour un téléphone physique (remplacez par l'IP du PC)
 
@@ -63,8 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         print("🔹 Données reçues : $responseData");
-     
-       
+
         await saveIdUser(email);
         print("🔹 Email stocké : $email");
 
@@ -76,40 +77,45 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           );
 
-        Future.delayed(const Duration(seconds: 1), () async {
-        print("🔹 Redirection...");
-        if (responseData['is_chef'] == true) {
-          // Vérification de l'ID utilisateur
-          if (responseData['idFamille'] != null) {
-            await saveUserId(responseData['idFamille']);
-          }
-          print("🔹 ID famille : ${responseData['idFamille']}");
-          print("🔹 ID utilisateur : ${responseData['idUser']}");
+          Future.delayed(const Duration(seconds: 1), () async {
+            print("🔹 Redirection...");
+            if (responseData['is_chef'] == true) {
+              // Vérification de l'ID utilisateur
+              if (responseData['idFamille'] != null) {
+                await saveUserId(responseData['idFamille']);
+              }
+              print("🔹 ID famille : ${responseData['idFamille']}");
+              print("🔹 ID utilisateur : ${responseData['idUser']}");
 
-    print("🔹 ??????Redirection vers EspaceChef");
-    String? userId = await getUserId();
-    String? idUser = await getIdUSer();
-    print("🔹 ID utilisateur : $idUser");
+              print("🔹 ??????Redirection vers EspaceChef");
+              String? userId = await getUserId();
+              String? idUser = await getIdUSer();
+              print("🔹 ID utilisateur : $idUser");
 
-    // Utilisation correcte de ChallengeProvider
-    final challengeProvider = Provider.of<ChallengeProvider>(context, listen: false);
-    await challengeProvider.fetchChallengesFromAPI(context, idUser ?? '');
+              // Utilisation correcte de ChallengeProvider
+              final challengeProvider = Provider.of<ChallengeProvider>(
+                context,
+                listen: false,
+              );
+              await challengeProvider.fetchChallengesFromAPI(
+                context,
+                idUser ?? '',
+              );
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => EspaceChef(userId: userId ?? ''),
-      ),
-    );
-  } 
-  else {
-    print("🔹!!!!!!!! Redirection vers EspaceMembre");
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => EspaceMembre(userId: userId ?? ''),
-      ),
-    );
-  }
-});
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => EspaceChef(userId: userId ?? ''),
+                ),
+              );
+            } else {
+              print("🔹!!!!!!!! Redirection vers EspaceMembre");
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => EspaceMembre(userId: userId ?? ''),
+                ),
+              );
+            }
+          });
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -119,17 +125,32 @@ class _LoginScreenState extends State<LoginScreen> {
           );
         }
       } else {
+        String errorMsg = 'Erreur inconnue';
+        try {
+          final responseData = json.decode(response.body);
+          final backendMsg = responseData['message'] ?? '';
+          // Personnalisation stricte du message affiché
+          if (backendMsg.contains('Email inexistant')) {
+            errorMsg = "L'adresse e-mail saisie n'existe pas dans notre base.";
+          } else if (backendMsg.contains('Mot de passe incorrect')) {
+            errorMsg = "Le mot de passe est incorrect. Veuillez réessayer.";
+          } else if (backendMsg.contains('Champs manquants')) {
+            errorMsg = "Veuillez remplir tous les champs.";
+          } else {
+            errorMsg = backendMsg.isNotEmpty ? backendMsg : errorMsg;
+          }
+        } catch (_) {
+          errorMsg = 'Erreur de communication avec le serveur.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ Erreur de connexion'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(errorMsg), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
+      // Gestion personnalisée pour erreur réseau
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ Erreur serveur : ${e.toString()}'),
+        const SnackBar(
+          content: Text('Impossible de se connecter au serveur. email ou mot de passe incorrect.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -261,6 +282,21 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(color: Color(0xFF2E7D32), fontSize: 16),
                 ),
               ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => EditPasswordScreen()),
+                  );
+                },
+                child: const Text(
+                  'Mot de passe oublié ?',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 16,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
             ],
           ),
@@ -269,5 +305,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-

@@ -7,7 +7,8 @@ import 'package:water_v0/widgets/fecthBadge.dart';
 
 
 class BadgesScreen extends StatefulWidget {
-  const BadgesScreen({Key? key}) : super(key: key);
+  const BadgesScreen({Key? key, required this.isChef}) : super(key: key);
+  final bool isChef;
 
   @override
   State<BadgesScreen> createState() => _BadgesScreenState();
@@ -67,7 +68,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
       bottomNavigationBar: CustomBottomNavigationBar(
         currentIndex: 2,
         userId: '',
-        isChef: true,
+        isChef: widget.isChef,
         onTap: (i) {/* à gérer si besoin */},
       ),
     );

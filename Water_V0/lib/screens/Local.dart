@@ -81,7 +81,7 @@ Future<Map<String, dynamic>> _checkLocalExistence() async {
   }
 
   try {
-    final uri = Uri.parse('http://10.0.2.2:5000/check-local?code_famille=$codeFamille');
+    final uri = Uri.parse('http://127.0.0.1:5000/check-local?code_famille=$codeFamille');
     print('Envoi de la requête à: ${uri.toString()}');
     
     final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -196,7 +196,7 @@ class _Step1LocationState extends State<Step1Location> {
     double latitude,
     double longitude,
   ) async {
-    final url = Uri.parse("http://10.0.2.2:5000/adresse");
+    final url = Uri.parse("http://127.0.0.1:5000/adresse");
 
     try {
       final response = await http.post(
@@ -889,7 +889,7 @@ class _Step2LocalDetailsState extends State<Step2LocalDetails> {
       "statut_occupation": _statutOccupation,
     };
 
-    final url = Uri.parse("http://10.0.2.2:5000/local");
+    final url = Uri.parse("http://127.0.0.1:5000/local");
 
     try {
       final response = await http
@@ -901,15 +901,21 @@ class _Step2LocalDetailsState extends State<Step2LocalDetails> {
           .timeout(const Duration(seconds: 10));
 
      if (response.statusCode == 200) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Local enregistré avec succès!')),
-  );
-  Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(builder: (context) => MyApp()),
-    (route) => false,
-  );
-} else {
+        final responseData = json.decode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Local enregistré avec succès!')),
+        );
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LocalFamilleScreen(
+              initialLocalData: responseData['local'] ?? localData,
+              isChef: true,
+            ),
+          ),
+          (route) => false,
+        );
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur ${response.statusCode}: ${response.body}'),

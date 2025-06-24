@@ -6,7 +6,7 @@ import 'package:water_v0/screens/BottomNavigationBar.dart';
 import 'recup_id_famille.dart';
 
 //const String serverUrl = 'http://127.0.0.1:5000';
- const String serverUrl = 'http://10.0.2.2:5000'; // Pour l'émulateur Android
+ const String serverUrl = 'http://127.0.0.1:5000'; // Pour l'émulateur Android
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
