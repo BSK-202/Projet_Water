@@ -711,6 +711,13 @@ Tous droits réservés © 2026 **BSK-202**.
 
 [![GitHub](https://img.shields.io/badge/GitHub-fadmajadda-181717?style=for-the-badge\&logo=github)](https://github.com/fadmajadda)
 
+### Binta
+
+[![GitHub](https://img.shields.io/badge/GitHub-Binta-181717?style=for-the-badge\&logo=github)](https://github.com/binta1112)
+
+### Chebila
+
+[![GitHub](https://img.shields.io/badge/GitHub-Chebila-181717?style=for-the-badge\&logo=github)](https://github.com/Chebila)
 
 </div>
 
